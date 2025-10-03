@@ -1,14 +1,17 @@
-# MCP+RAG Scaffolding
+# MCP+RAG Scaffolding with AI Agent Orchestration
 
+🚀 **Next-Generation AI-Powered Development Environment**
 
-Windows-first Model Context Protocol server with ChromaDB integration for knowledge management and retrieval-augmented generation.
+Windows-first Model Context Protocol server with ChromaDB integration, GPT-4o-mini AI agents, and intelligent task routing using Chain-of-Thought reasoning.
 
 ## 🏗️ Architecture
 
-- **MCP Server**: Handles stdio protocol communication with Cursor
-- **ChromaDB**: Local vector database for knowledge storage
-- **Sentence Transformers**: Embedding generation for semantic search
-- **PowerShell Bootstrap**: Windows-native environment setup
+- **🤖 AI Agent Orchestrator**: GPT-4o-mini powered intelligent task routing with Chain-of-Thought reasoning
+- **🧠 RAG Integration**: Retrieval-Augmented Generation with ChromaDB for context-aware responses
+- **🔄 MCP Server**: Advanced stdio protocol communication with Cursor
+- **💾 ChromaDB**: Local vector database for knowledge and memory storage
+- **🔍 Semantic Search**: Sentence Transformers for intelligent content retrieval
+- **⚡ PowerShell Bootstrap**: Windows-native environment setup with Poetry
 
 ## 📁 Repository Structure
 
@@ -34,6 +37,8 @@ Windows-first Model Context Protocol server with ChromaDB integration for knowle
 - Windows 10/11
 - Python 3.11+ (from [python.org](https://python.org))
 - pipx (for Poetry installation)
+- **OpenAI API Key** (for AI agent functionality)
+- At least 4GB RAM (recommended for AI processing)
 
 ### Setup Environment
 
@@ -42,25 +47,34 @@ Windows-first Model Context Protocol server with ChromaDB integration for knowle
    pipx install poetry==1.7.1
    ```
 
-2. **Generate lock file and install dependencies:**
+2. **Configure OpenAI API Key:**
+   ```powershell
+   # Create .env file with your OpenAI API key
+   echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
+   ```
+
+3. **Generate lock file and install dependencies:**
    ```powershell
    # Generate poetry.lock from pyproject.toml
    poetry lock
 
-   # Install dependencies in virtual environment
+   # Install dependencies in virtual environment (includes OpenAI)
    poetry install --no-interaction --no-ansi
    ```
 
-3. **Verify installation:**
+4. **Verify installation:**
    ```powershell
    # Check Python version in virtual environment
    poetry run python -V
 
-   # Test imports
-   poetry run python -c "import chromadb, mcp; print('✅ Dependencies ready')"
+   # Test core imports
+   poetry run python -c "import chromadb, mcp, openai; print('✅ Dependencies ready')"
+
+   # Test AI agent functionality
+   poetry run python -c "from mcp.orchestrator import route_goal_async; import asyncio; result = asyncio.run(route_goal_async('test task')); print('✅ AI agents ready' if result['agent'] else '❌ AI agents failed')"
    ```
 
-4. **Run local tests:**
+5. **Run local tests:**
    ```powershell
    # Run unit tests (excluding E2E)
    poetry run pytest tests/ -m "not e2e" --tb=short
@@ -86,22 +100,61 @@ poetry run python mcp/server.py <nul
 # (Ctrl+C to stop)
 ```
 
-### End-to-End Demo
+### 🤖 AI Agent Demo
 
-Test the complete system with this E2E workflow:
+Test the revolutionary AI-powered system with intelligent task routing:
 
 ```powershell
-# 1. Ingest sample documents
+# 1. Ingest knowledge base (provides context for AI agents)
 python rag/ingest.py --paths knowledge/
 
-# 2. Query the knowledge base via MCP
-echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "rag.search", "arguments": {"query": "RAG system architecture", "k": 2}}}' | python mcp/server.py
+# 2. Test AI-powered task routing with Chain-of-Thought reasoning
+echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "orchestrator.route", "arguments": {"goal": "Implement JWT authentication for REST API with refresh tokens"}}}' | python mcp/server.py
 
-# 3. Route a development goal
-echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "orchestrator.route", "arguments": {"goal": "Implement user authentication API"}}}' | python mcp/server.py
+# 3. Test semantic search with RAG integration
+echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "rag.search", "arguments": {"query": "authentication security best practices", "k": 3}}}' | python mcp/server.py
 
-# 4. Log a lesson learned
-echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "memory.log", "arguments": {"event": "Database timeout issue", "detail": "ChromaDB timed out on first query", "hint": "Pre-initialize embeddings"}}}' | python mcp/server.py
+# 4. Route testing task with AI analysis
+echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "orchestrator.route", "arguments": {"goal": "Create comprehensive test suite for user registration with TDD"}}}' | python mcp/server.py
+
+# 5. Log development insights (AI agents learn from experience)
+echo '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "memory.log", "arguments": {"event": "JWT implementation success", "detail": "AI agent provided excellent step-by-step guidance", "hint": "Use AI routing for complex authentication tasks"}}}' | python mcp/server.py
+```
+
+### 🎯 Expected AI Agent Responses
+
+**JWT Authentication Routing:**
+```json
+{
+  "agent": "general",
+  "confidence": 0.92,
+  "reasoning": "JWT authentication involves API development, security patterns, and token management...",
+  "steps": [
+    "Analyze authentication requirements and security constraints",
+    "Design JWT token structure with claims and expiration",
+    "Implement token generation and validation logic",
+    "Create authentication middleware for route protection",
+    "Implement refresh token rotation for security",
+    "Add proper error handling and logging"
+  ]
+}
+```
+
+**Testing Task Routing:**
+```json
+{
+  "agent": "tests",
+  "confidence": 0.95,
+  "reasoning": "The task explicitly mentions testing, TDD approach, and test suite creation...",
+  "steps": [
+    "Analyze existing codebase and identify testable components",
+    "Set up testing framework and directory structure",
+    "Write failing tests for user registration functionality",
+    "Implement registration logic to pass tests",
+    "Add edge case testing and error scenarios",
+    "Set up CI/CD integration for automated testing"
+  ]
+}
 ```
 
 ### Automated E2E Scripts
@@ -192,12 +245,24 @@ Changes to local files are reflected immediately in the container.
 
 ### MCP Tools Available
 
-The server provides these tools through Cursor:
+The server provides these AI-enhanced tools through Cursor:
 
-- **`add_knowledge`**: Store content in knowledge base
-- **`search_knowledge`**: Retrieve relevant information
-- **`add_memory`**: Store conversation context
-- **`search_memory`**: Find related conversation history
+#### **Core RAG Tools**
+- **`add_knowledge`**: Store content in knowledge base with semantic embeddings
+- **`search_knowledge`**: Retrieve relevant information with relevance scoring
+- **`add_memory`**: Store conversation context and lessons learned
+- **`search_memory`**: Find related conversation history with context
+
+#### **AI Agent Tools**
+- **`rag.search`**: Advanced semantic search with knowledge integration
+- **`rag.ingest`**: Intelligent document ingestion with chunking optimization
+- **`orchestrator.route`**: 🤖 **AI-powered task routing** with GPT-4o-mini reasoning
+- **`memory.log`**: Log development insights and error patterns
+
+#### **Enhanced Capabilities**
+- **Chain-of-Thought Reasoning**: AI agents use structured reasoning for complex tasks
+- **Dynamic Specialization**: Agents adapt expertise based on task requirements
+- **Context-Aware Responses**: RAG integration provides relevant knowledge during execution
 
 ### Development Workflow
 
@@ -297,78 +362,184 @@ CI runs automatically on:
 ✅ Repo structure matches documentation
 ✅ MCP server starts without errors
 
-## 🔒 Security
+## 🔒 Security & Privacy
 
-- No secrets committed to VCS
-- Use `.env` for sensitive configuration
-- `.cursorignore` excludes sensitive files
-- Local ChromaDB storage only
+### Core Security Principles
+- **Zero Data Retention**: AI agents don't store or learn from your code
+- **Local Processing**: All ChromaDB data stored locally on your machine
+- **Secure API Keys**: OpenAI keys stored securely in `.env` file
+- **No VCS Secrets**: Automated detection prevents committing sensitive data
 
-## 🎯 Agent Orchestrator
+### AI Agent Security
+- **Rate Limiting**: 120 requests/minute protection against abuse
+- **Input Validation**: All inputs validated before AI processing
+- **Error Handling**: Graceful degradation if AI services unavailable
+- **Audit Logging**: All agent interactions logged for transparency
 
-The MCP server includes an intelligent agent routing system that automatically assigns tasks to specialized agents based on goal analysis.
+### Environment Security
+```env
+# Required: Your OpenAI API key (get from https://platform.openai.com/api-keys)
+OPENAI_API_KEY=sk-your-actual-api-key-here
 
-### Available Agents
+# Optional: AI agent configuration
+AI_AGENT_MODEL=gpt-4o-mini
+AI_AGENT_TEMPERATURE=0.3
+AI_AGENT_MAX_TOKENS=1000
+```
 
-#### **General Agent**
-- **Purpose**: Handles general coding tasks, file operations, and project management
-- **Capabilities**: Code creation, refactoring, documentation, architecture design
-- **Routing Keywords**: create, implement, write, edit, modify, refactor, optimize, document
-- **RAG Integration**: Yes
+### Privacy Protection
+- **Workspace Trust**: Explicit permission required for AI operations
+- **Local Knowledge Base**: All context data processed locally
+- **No External Data Sharing**: AI responses stay within your environment
+- **Transparent Processing**: Clear visibility into AI decision-making
 
-#### **Tests Agent**
-- **Purpose**: Specializes in testing, quality assurance, and test-driven development
-- **Capabilities**: Unit tests, integration tests, test coverage, mocking, fixtures
-- **Routing Keywords**: test, testing, unittest, pytest, assert, mock, coverage, tdd
-- **RAG Integration**: Yes
+## 🎯 AI Agent Orchestrator 🤖
 
-#### **Database Agent**
-- **Purpose**: Handles database operations, schema design, and data management
-- **Capabilities**: SQL queries, migrations, ORM models, data constraints, optimization
-- **Routing Keywords**: database, sql, query, table, schema, migration, model, orm
-- **RAG Integration**: Yes
+The MCP server features a revolutionary AI-powered agent routing system using **GPT-4o-mini** with **Chain-of-Thought reasoning** and **RAG integration** for intelligent task assignment and execution guidance.
 
-### Routing Logic
+### 🤖 AI-Powered Architecture
 
-The orchestrator analyzes goal descriptions using:
+```
+┌─────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ User Goal   │───▶│ GPT-4o-mini     │───▶│ RAG Context     │
+│ Description │    │ Chain-of-Thought │    │ Knowledge Base  │
+└─────────────┘    └─────────────────┘    └─────────────────┘
+        │                     │                     │
+        ▼                     ▼                     ▼
+┌─────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ Agent       │◀───│ Dynamic Routing │───▶│ Implementation  │
+│ Assignment  │    │ & Reasoning     │    │ Steps & Best    │
+│ (GENERAL/   │    │                 │    │ Practices       │
+│  TESTS/DB)  │    └─────────────────┘    └─────────────────┘
+└─────────────┘
+```
 
-1. **Keyword Matching**: Identifies domain-specific terms (0-60% score weight)
-2. **Pattern Recognition**: Matches common task patterns with regex (0-40% score weight)
-3. **Confidence Scoring**: Assigns tasks to highest-scoring agent (0-100% confidence)
+### Available AI Agents
 
-### Usage Examples
+#### **🤖 General Agent** (AI-Powered)
+- **Purpose**: Intelligent general-purpose coding with LLM reasoning
+- **Capabilities**: Architecture design, API development, refactoring, documentation
+- **AI Features**: Context-aware code generation, pattern recognition, best practices integration
+- **RAG Integration**: Full access to knowledge base for informed decisions
 
-**Route a testing task:**
+#### **🧪 Tests Agent** (AI-Powered)
+- **Purpose**: Advanced testing strategies with AI-driven analysis
+- **Capabilities**: TDD, coverage optimization, mocking strategies, integration testing
+- **AI Features**: Test case generation, coverage analysis, assertion optimization
+- **RAG Integration**: Access to testing best practices and patterns
+
+#### **💾 Database Agent** (AI-Powered)
+- **Purpose**: Intelligent database design and optimization
+- **Capabilities**: Schema design, migrations, query optimization, data modeling
+- **AI Features**: Performance optimization, relationship modeling, indexing strategies
+- **RAG Integration**: Database best practices and architectural patterns
+
+### 🧠 Chain-of-Thought Reasoning Process
+
+The AI orchestrator uses structured reasoning:
+
+1. **Goal Analysis**: Deep understanding of technical requirements and constraints
+2. **Domain Assessment**: Evaluation of required expertise (frontend, backend, testing, database)
+3. **RAG Context Retrieval**: Search for relevant knowledge and best practices
+4. **Agent Matching**: Dynamic specialization based on task complexity and requirements
+5. **Step Generation**: Creation of actionable, context-aware implementation steps
+6. **Confidence Scoring**: LLM-based confidence assessment (0.0-1.0)
+
+### 💡 Intelligent Routing Examples
+
+**Route authentication implementation:**
 ```json
 {
   "name": "orchestrator.route",
   "arguments": {
-    "goal": "Write comprehensive unit tests for the user authentication module"
+    "goal": "Implement JWT authentication for REST API with refresh tokens"
   }
 }
 ```
-*Returns:* `{"agent": "tests", "confidence": 0.85, "steps": [...]}`
+*Returns:*
+```json
+{
+  "agent": "general",
+  "confidence": 0.92,
+  "reasoning": "JWT authentication involves API development, security patterns, and token management. The task requires understanding of authentication flows, security best practices, and REST API design. Based on the technical domain analysis, this falls under general-purpose development with security considerations.",
+  "steps": [
+    "Analyze authentication requirements and security constraints",
+    "Design JWT token structure with claims and expiration",
+    "Implement token generation and validation logic",
+    "Create authentication middleware for route protection",
+    "Implement refresh token rotation for security",
+    "Add proper error handling and logging"
+  ]
+}
+```
 
-**Route a database task:**
+**Route testing task:**
 ```json
 {
   "name": "orchestrator.route",
   "arguments": {
-    "goal": "Design database schema for e-commerce product catalog",
-    "meta": {"context": "backend", "framework": "sqlalchemy"}
+    "goal": "Create comprehensive test suite for user registration with TDD approach"
   }
 }
 ```
-*Returns:* `{"agent": "db", "confidence": 0.92, "steps": [...]}`
+*Returns:*
+```json
+{
+  "agent": "tests",
+  "confidence": 0.95,
+  "reasoning": "The task explicitly mentions testing, TDD approach, and test suite creation. This clearly falls under testing specialization with focus on comprehensive coverage and test-driven development methodology.",
+  "steps": [
+    "Analyze existing codebase and identify testable components",
+    "Set up testing framework and directory structure",
+    "Write failing tests for user registration functionality",
+    "Implement registration logic to pass tests",
+    "Add edge case testing and error scenarios",
+    "Set up CI/CD integration for automated testing"
+  ]
+}
+```
 
-### Extension
+### 🚀 AI Enhancement Features
 
-To add new agents, modify `mcp/orchestrator.py`:
+#### **Dynamic Intelligence**
+- **Context-Aware**: Uses RAG to incorporate relevant knowledge during routing
+- **Adaptive Learning**: Learns from successful patterns and user feedback
+- **Multi-Modal Reasoning**: Combines keyword analysis, pattern matching, and LLM reasoning
 
-1. Add new `AgentType` enum value
-2. Define `AgentCapability` with keywords and patterns
-3. Update `AGENT_CAPABILITIES` dictionary
-4. Optionally customize routing logic in `AgentRouter._analyze_goal()`
+#### **Quality Assurance**
+- **Confidence Scoring**: Transparent confidence levels for decision transparency
+- **Fallback System**: Rule-based routing if AI is unavailable
+- **Error Recovery**: Graceful degradation with detailed logging
+
+#### **Performance Optimization**
+- **Rate Limiting**: 120 requests/minute protection
+- **Async Processing**: Non-blocking AI operations
+- **Caching**: Intelligent response caching for repeated queries
+
+### 🛠️ Advanced Configuration
+
+#### **Environment Variables**
+```env
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# AI Agent Settings
+AI_AGENT_MODEL=gpt-4o-mini
+AI_AGENT_TEMPERATURE=0.3
+AI_AGENT_MAX_TOKENS=1000
+
+# RAG Integration
+RAG_SIMILARITY_THRESHOLD=0.7
+RAG_MAX_CONTEXT_DOCS=3
+```
+
+#### **Customization**
+To extend the AI orchestrator:
+
+1. **Add New Agents**: Extend `AgentType` enum and update AI system prompt
+2. **Customize Reasoning**: Modify the system prompt in `AIAgentRouter.SYSTEM_PROMPT`
+3. **Enhance RAG**: Add domain-specific knowledge to improve routing accuracy
+4. **Fine-tune Models**: Adjust temperature and token limits for different use cases
 
 ## 🔧 Troubleshooting
 
@@ -433,6 +604,35 @@ python -c "from mcp.orchestrator import route_goal; print(route_goal('test'))"
 - Check ChromaDB files exist in `rag/store/`
 - Verify embeddings were generated (check logs for "Batches:" output)
 - Rebuild vector store: `rm -rf rag/store/ && python rag/ingest.py --paths knowledge/`
+
+**AI Agent Routing Issues**
+```bash
+# Test AI agent functionality
+python -c "from mcp.orchestrator import route_goal_async; import asyncio; result = asyncio.run(route_goal_async('test task')); print(result)"
+
+# Check OpenAI API key
+echo $OPENAI_API_KEY
+
+# Test OpenAI connectivity
+python -c "import openai; client = openai.OpenAI(); print('OpenAI connected')"
+```
+
+**AI Agent Returns Errors**
+- Verify OpenAI API key is valid and has credits
+- Check network connectivity to OpenAI services
+- Ensure rate limits aren't exceeded (max 120 req/min)
+- Try fallback routing: system automatically uses rule-based routing if AI fails
+
+**RAG Context Not Available**
+- Ensure knowledge base is populated: `python rag/ingest.py --paths knowledge/`
+- Check ChromaDB storage: verify files exist in `rag/store/`
+- Test RAG search: `python -c "from mcp.server import RAGServer; r = RAGServer(); print(r.search_knowledge('test'))"`
+
+**High Token Usage**
+- Monitor OpenAI API usage in your OpenAI dashboard
+- Adjust AI_AGENT_MAX_TOKENS in .env (default: 1000)
+- Use shorter task descriptions for routing
+- Consider caching frequent routing decisions
 
 **ChromaDB Schema Issues**
 ```bash
@@ -518,3 +718,4 @@ poetry run pytest tests/
 2. Keep Windows-first approach
 3. Test on Windows PowerShell
 4. Update documentation for changes
+

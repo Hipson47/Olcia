@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
 """
-MCP Orchestrator with Agent Routing
-Routes tasks to specialized agents based on goal analysis.
+AI-Powered MCP Orchestrator with LLM Reasoning
+Intelligent agent routing using GPT-4o-mini with Chain-of-Thought reasoning.
 """
 
+import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
+import asyncio
+
+try:
+    import openai
+    from openai import AsyncOpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    print("Warning: OpenAI not available. Falling back to rule-based routing.")
 
 
 class AgentType(Enum):
@@ -36,17 +46,11 @@ class RoutingResult:
     steps: list[str]
 
 
-class AgentRouter:
+class RuleBasedRouter:
     """
-    Routes goals to appropriate agents based on content analysis.
-
-    Extension seams:
-    - Add new AgentCapability instances to AGENT_CAPABILITIES
-    - Modify routing logic in _analyze_goal()
-    - Extend AgentType enum for new agents
+    Fallback rule-based router for when AI is unavailable.
     """
 
-    # Agent capabilities and routing criteria
     AGENT_CAPABILITIES = {
         AgentType.GENERAL: AgentCapability(
             name="General Purpose Agent",
@@ -100,19 +104,88 @@ class AgentRouter:
     }
 
     def __init__(self) -> None:
-        """Initialize the agent router."""
+        """Initialize rule-based router."""
         self.capabilities = self.AGENT_CAPABILITIES
 
     def route_goal(self, goal: str, meta: dict[str, Any] | None = None) -> RoutingResult:
+        """Rule-based routing as fallback."""
+        # Simplified rule-based routing
+        goal_lower = goal.lower()
+
+        if any(word in goal_lower for word in ["test", "testing", "pytest", "unittest", "assert", "mock"]):
+            agent = AgentType.TESTS
+            confidence = 0.8
+        elif any(word in goal_lower for word in ["database", "db", "sql", "query", "table", "schema", "migration"]):
+            agent = AgentType.DB
+            confidence = 0.8
+        else:
+            agent = AgentType.GENERAL
+            confidence = 0.6
+
+        return RoutingResult(
+            agent=agent,
+            confidence=confidence,
+            reasoning=f"Rule-based routing assigned to {agent.value} agent",
+            steps=["Analyze task requirements", "Implement solution", "Test functionality"]
+        )
+
+
+class AIAgentRouter:
+    """
+    AI-powered agent router using GPT-4o-mini with Chain-of-Thought reasoning.
+
+    This system analyzes goals using LLM to provide intelligent routing decisions,
+    dynamic specialization, and context-aware reasoning with RAG integration.
+    """
+
+    SYSTEM_PROMPT = """
+    You are an expert software engineering agent orchestrator with access to a comprehensive knowledge base. Your task is to analyze development goals and route them to the most appropriate specialized agent, leveraging relevant knowledge when available.
+
+    Available agents:
+    1. GENERAL: General-purpose coding tasks, file operations, refactoring, architecture design, API development
+    2. TESTS: Testing, quality assurance, TDD, test coverage, mocking, assertions, integration testing
+    3. DB: Database operations, schema design, migrations, ORM, data modeling, CRUD operations, query optimization
+
+    For each goal, provide:
+    1. Most appropriate agent (GENERAL, TESTS, or DB)
+    2. Confidence score (0.0-1.0) based on how well the goal matches agent capabilities and available knowledge
+    3. Chain-of-Thought reasoning explaining your decision, incorporating relevant knowledge from the provided context
+    4. Specific implementation steps tailored to the goal, informed by best practices from the knowledge base
+
+    Use Chain-of-Thought reasoning:
+    - Analyze the goal's technical domain and requirements
+    - Consider required expertise, tools, and methodologies
+    - Review relevant knowledge from the provided RAG context
+    - Evaluate complexity, dependencies, and architectural implications
+    - Determine best agent specialization based on expertise alignment
+    - Generate actionable, context-aware implementation steps following industry best practices
+
+    When RAG knowledge is provided:
+    - Incorporate relevant patterns, frameworks, and approaches from the knowledge base
+    - Reference specific technologies, architectures, or methodologies mentioned
+    - Adapt implementation steps based on proven best practices
+    - Use the knowledge to improve confidence scoring and step specificity
+
+    Return response as JSON with keys: agent, confidence, reasoning, steps
+    """
+
+    def __init__(self) -> None:
+        """Initialize AI agent router."""
+        self.client: Optional[AsyncOpenAI] = None
+        if OPENAI_AVAILABLE:
+            self.client = AsyncOpenAI()  # Will use OPENAI_API_KEY from env
+        self.fallback_router = RuleBasedRouter()
+
+    async def route_goal(self, goal: str, meta: dict[str, Any] | None = None) -> RoutingResult:
         """
-        Route a goal to the most appropriate agent.
+        Route a goal using AI analysis with Chain-of-Thought reasoning.
 
         Args:
             goal: The goal description to route
             meta: Optional metadata about the context
 
         Returns:
-            RoutingResult with agent assignment and reasoning
+            RoutingResult with AI-powered agent assignment and reasoning
         """
         if not goal or not goal.strip():
             return RoutingResult(
@@ -122,151 +195,126 @@ class AgentRouter:
                 steps=["Clarify the goal and try again"]
             )
 
-        # Analyze the goal and determine best agent
-        return self._analyze_goal(goal.lower(), meta or {})
+        # Try AI-powered routing first
+        if self.client:
+            try:
+                return await self._ai_route_goal(goal, meta or {})
+            except Exception as e:
+                print(f"AI routing failed: {e}. Falling back to rule-based routing.")
+                # Fall through to fallback routing
 
-    def _analyze_goal(self, goal: str, meta: dict[str, Any]) -> RoutingResult:
-        """
-        Analyze goal content and route to appropriate agent.
+        # Fallback to rule-based routing
+        return self.fallback_router.route_goal(goal, meta)
 
-        Extension seam: Modify this method to add new routing logic.
-        """
-        # Score each agent based on keyword matches and patterns
-        scores = {}
+    async def _ai_route_goal(self, goal: str, meta: dict[str, Any]) -> RoutingResult:
+        """Perform AI-powered goal routing using GPT-4o-mini with RAG context."""
+        context = f"Goal: {goal}"
+        if meta:
+            context += f"\nContext: {json.dumps(meta, indent=2)}"
 
-        for agent_type, capability in self.capabilities.items():
-            score = self._calculate_agent_score(goal, capability)
-            scores[agent_type] = score
+        # Get relevant context from RAG knowledge base
+        rag_context = await self.get_rag_context(goal)
+        if rag_context:
+            context += f"\n\nRelevant Knowledge from RAG:\n{rag_context}"
 
-        # Find the highest scoring agent
-        # If there are ties, prefer specialized agents over general
-        max_score = max(scores.values())
-        candidates = [agent for agent, score in scores.items() if score == max_score]
+        messages = [
+            {"role": "system", "content": self.SYSTEM_PROMPT},
+            {"role": "user", "content": f"Please analyze this development goal and route it to the most appropriate agent. Use the provided knowledge context when available:\n\n{context}"}
+        ]
 
-        if len(candidates) == 1:
-            best_agent = candidates[0]
-        else:
-            # Prefer specialized agents in tie situations
-            # Priority: tests > db > general
-            priority_order = [AgentType.TESTS, AgentType.DB, AgentType.GENERAL]
-            for agent in priority_order:
-                if agent in candidates:
-                    best_agent = agent
-                    break
-            else:
-                best_agent = candidates[0]  # Fallback
-
-        confidence = scores[best_agent]
-
-        # Generate reasoning and steps
-        reasoning, steps = self._generate_reasoning_and_steps(best_agent, goal, confidence, meta)
-
-        return RoutingResult(
-            agent=best_agent,
-            confidence=confidence,
-            reasoning=reasoning,
-            steps=steps
+        response = await self.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.3,  # Balanced creativity and consistency
+            max_tokens=1000,
+            response_format={"type": "json_object"}
         )
 
-    def _calculate_agent_score(self, goal: str, capability: AgentCapability) -> float:
+        result_data = json.loads(response.choices[0].message.content)
+
+        # Map string agent names to enum values
+        agent_mapping = {
+            "GENERAL": AgentType.GENERAL,
+            "TESTS": AgentType.TESTS,
+            "DB": AgentType.DB
+        }
+
+        agent_str = result_data.get("agent", "GENERAL").upper()
+        agent = agent_mapping.get(agent_str, AgentType.GENERAL)
+
+        return RoutingResult(
+            agent=agent,
+            confidence=min(float(result_data.get("confidence", 0.5)), 1.0),
+            reasoning=result_data.get("reasoning", "AI-powered routing decision"),
+            steps=result_data.get("steps", ["Analyze requirements", "Implement solution", "Test functionality"])
+        )
+
+    async def get_rag_context(self, goal: str) -> str:
         """
-        Calculate how well a goal matches an agent's capabilities.
-
-        Extension seam: Modify scoring algorithm here.
+        Get relevant context from RAG knowledge base for better routing decisions.
         """
-        score = 0.0
+        try:
+            # Import RAG server dynamically to avoid circular imports
+            from mcp.server import RAGServer
+            import asyncio
 
-        # Keyword matching (0-0.7 points)
-        # More sensitive: each match adds points, but we normalize differently
-        keyword_matches = sum(1 for keyword in capability.keywords if keyword in goal.lower())
-        if keyword_matches > 0:
-            # Base score from matches, with bonus for multiple matches
-            base_score = min(keyword_matches * 0.2, 0.5)  # Up to 0.5 for keyword matches
-            # Density bonus: more matches relative to goal length
-            density_bonus = min(keyword_matches / max(len(goal.split()) / 10, 1), 0.2)
-            score += base_score + density_bonus
+            # Create a temporary RAG server instance for searching
+            # Note: In production, this should be a singleton or injected dependency
+            rag_server = RAGServer()
 
-        # Pattern matching (0-0.3 points)
-        pattern_matches = sum(1 for pattern in capability.patterns
-                            if re.search(pattern, goal, re.IGNORECASE))
-        if pattern_matches > 0:
-            score += min(pattern_matches * 0.15, 0.3)  # Up to 0.3 for pattern matches
+            # Search for relevant context in the knowledge base
+            results = rag_server.search_knowledge(goal, n_results=3)
 
-        return min(score, 1.0)  # Cap at 1.0
+            if results:
+                context_parts = []
+                for result in results:
+                    if result["relevance_score"] > 0.7:  # Only include highly relevant results
+                        context_parts.append(f"• {result['content'][:500]}... (relevance: {result['relevance_score']:.2f})")
 
-    def _generate_reasoning_and_steps(self, agent: AgentType, goal: str,
-                                    confidence: float, meta: dict[str, Any]) -> tuple[str, list[str]]:
-        """
-        Generate reasoning and recommended steps for the chosen agent.
+                if context_parts:
+                    return "\n".join(context_parts)
 
-        Extension seam: Customize reasoning and steps per agent here.
-        """
-        capability = self.capabilities[agent]
+        except Exception as e:
+            # Silently fail and return empty context if RAG is unavailable
+            print(f"RAG context retrieval failed: {e}")
 
-        # Base reasoning
-        confidence_text = "high" if confidence > 0.7 else "medium" if confidence > 0.4 else "low"
-        reasoning = f"Goal matches {capability.name} capabilities with {confidence_text} confidence"
-
-        # Agent-specific steps
-        if agent == AgentType.TESTS:
-            steps = [
-                "Analyze existing test coverage and structure",
-                "Identify test cases needed for the goal",
-                "Implement unit tests with proper mocking",
-                "Run tests and verify coverage",
-                "Document test scenarios and edge cases"
-            ]
-        elif agent == AgentType.DB:
-            steps = [
-                "Analyze data requirements and schema needs",
-                "Design or modify database schema/models",
-                "Implement data access layer and queries",
-                "Test data operations and constraints",
-                "Document data model and migration steps"
-            ]
-        else:  # GENERAL
-            steps = [
-                "Analyze requirements and break down the task",
-                "Plan implementation approach and structure",
-                "Implement the solution following best practices",
-                "Test functionality and edge cases",
-                "Document changes and update relevant files"
-            ]
-
-        # Add RAG usage if applicable
-        if capability.can_use_rag and confidence > 0.3:
-            steps.insert(0, "Search knowledge base for relevant examples and patterns")
-
-        return reasoning, steps
+        return ""
 
     def get_available_agents(self) -> dict[str, dict[str, Any]]:
         """
-        Get information about all available agents.
-
-        Returns:
-            Dictionary mapping agent names to their capabilities
+        Get information about all available agents with AI capabilities.
         """
         return {
-            agent_type.value: {
-                "name": capability.name,
-                "description": capability.description,
-                "can_use_rag": capability.can_use_rag,
-                "keywords": capability.keywords[:5],  # Show first 5 keywords
-                "keyword_count": len(capability.keywords)
+            "general": {
+                "name": "AI General Agent",
+                "description": "Intelligent general-purpose coding with LLM reasoning",
+                "capabilities": ["Architecture", "Refactoring", "Implementation", "Documentation"],
+                "ai_powered": True
+            },
+            "tests": {
+                "name": "AI Testing Agent",
+                "description": "Advanced testing strategies with AI-driven test generation",
+                "capabilities": ["TDD", "Coverage Analysis", "Mocking", "Integration Testing"],
+                "ai_powered": True
+            },
+            "db": {
+                "name": "AI Database Agent",
+                "description": "Intelligent database design and optimization with LLM analysis",
+                "capabilities": ["Schema Design", "Migrations", "Query Optimization", "Data Modeling"],
+                "ai_powered": True
             }
-            for agent_type, capability in self.capabilities.items()
         }
 
 
-# Global router instance
-router = AgentRouter()
+# Global AI router instance
+router = AIAgentRouter()
 
 
-def route_goal(goal: str, meta: dict[str, Any] | None = None) -> dict[str, Any]:
+async def route_goal_async(goal: str, meta: dict[str, Any] | None = None) -> dict[str, Any]:
     """
-    Route a goal to an appropriate agent.
+    Route a goal to an appropriate agent using AI-powered analysis.
 
-    This is the main entry point for the orchestrator.route tool.
+    This is the async entry point for the orchestrator.route tool.
 
     Args:
         goal: The goal description
@@ -275,7 +323,7 @@ def route_goal(goal: str, meta: dict[str, Any] | None = None) -> dict[str, Any]:
     Returns:
         Dictionary with agent, confidence, reasoning, and steps
     """
-    result = router.route_goal(goal, meta)
+    result = await router.route_goal(goal, meta)
 
     return {
         "agent": result.agent.value,
@@ -283,3 +331,28 @@ def route_goal(goal: str, meta: dict[str, Any] | None = None) -> dict[str, Any]:
         "reasoning": result.reasoning,
         "steps": result.steps
     }
+
+
+def route_goal(goal: str, meta: dict[str, Any] | None = None) -> dict[str, Any]:
+    """
+    Synchronous wrapper for route_goal_async.
+
+    This maintains backward compatibility with existing MCP server calls.
+    """
+    import asyncio
+
+    try:
+        # Try to get current event loop
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # We're in an async context, create a new thread
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, route_goal_async(goal, meta))
+                return future.result()
+        else:
+            # We can run the coroutine directly
+            return loop.run_until_complete(route_goal_async(goal, meta))
+    except RuntimeError:
+        # No event loop, create one
+        return asyncio.run(route_goal_async(goal, meta))
