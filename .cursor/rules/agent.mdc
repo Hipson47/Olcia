@@ -1,0 +1,50 @@
+# Development Workflow Gates
+
+## Plan Phase
+- Always create a structured task list for complex tasks (>3 steps)
+- Break down requirements into actionable items
+- Identify dependencies and prerequisites
+- Show plan to user before implementation
+
+## Code Phase
+- Implement changes following established patterns
+- Use appropriate tools for file operations
+- Maintain code quality and consistency
+- Handle edge cases and error conditions
+
+## Test Phase
+- Validate functionality with appropriate tests
+- Check for integration issues
+- Run linter and fix errors
+- Test on target platform (Windows PowerShell)
+
+## Review Phase
+- Verify deliverables match acceptance criteria
+- Check minimal diffs and atomic commits
+- Ensure documentation is updated
+- Validate environment setup works
+
+## Safety Rules
+- No secrets in version control
+- Use .env.example for sensitive configurations
+- Keep changes atomic and reviewable
+- Follow Windows-first development practices
+
+## Quality Gates (Mandatory)
+- **Ruff**: Run `ruff check .` and fix all issues before proceeding
+- **MyPy**: Run `mypy . --strict` and resolve all type errors
+- **Pytest**: Run `python -m pytest tests/` and ensure all tests pass
+- **Stop-on-fail**: Never proceed past a failing quality gate
+
+## Minimal-Diff Policy
+- Keep changes atomic and focused
+- One logical change per commit/PR
+- Use search_replace for precision edits
+- Avoid broad refactoring without explicit approval
+- Test each change incrementally
+
+## Tool Usage
+- Prefer search_replace for precise edits
+- Use grep for finding code patterns
+- Leverage semantic search for understanding codebase
+- Run commands in appropriate shell environment
