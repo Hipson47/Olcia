@@ -4,19 +4,17 @@ AI-Powered MCP Orchestrator with LLM Reasoning
 Intelligent agent routing using GPT-4o-mini with Chain-of-Thought reasoning.
 """
 
+import asyncio
+import importlib.util
 import json
-import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional
-import asyncio
+from typing import Any
 
-try:
-    import openai
+OPENAI_AVAILABLE = importlib.util.find_spec("openai") is not None
+if OPENAI_AVAILABLE:
     from openai import AsyncOpenAI
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
+else:
     print("Warning: OpenAI not available. Falling back to rule-based routing.")
 
 
@@ -171,7 +169,7 @@ class AIAgentRouter:
 
     def __init__(self) -> None:
         """Initialize AI agent router."""
-        self.client: Optional[AsyncOpenAI] = None
+        self.client: AsyncOpenAI | None = None
         if OPENAI_AVAILABLE:
             self.client = AsyncOpenAI()  # Will use OPENAI_API_KEY from env
         self.fallback_router = RuleBasedRouter()
@@ -255,8 +253,8 @@ class AIAgentRouter:
         """
         try:
             # Import RAG server dynamically to avoid circular imports
+
             from mcp.server import RAGServer
-            import asyncio
 
             # Create a temporary RAG server instance for searching
             # Note: In production, this should be a singleton or injected dependency
@@ -339,7 +337,6 @@ def route_goal(goal: str, meta: dict[str, Any] | None = None) -> dict[str, Any]:
 
     This maintains backward compatibility with existing MCP server calls.
     """
-    import asyncio
 
     try:
         # Try to get current event loop
