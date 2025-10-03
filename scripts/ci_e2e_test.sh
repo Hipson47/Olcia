@@ -33,6 +33,25 @@ echo 'Sample document created'
 
 # Ingest the document
 echo 'Starting ingestion...'
+echo 'Testing imports first...'
+python -c "
+import sys
+print('Python path:', sys.path[:3])
+try:
+    import yaml
+    print('✓ yaml module available')
+except ImportError as e:
+    print('✗ yaml module missing:', e)
+    exit(1)
+
+try:
+    import chromadb
+    print('✓ chromadb available')
+except ImportError as e:
+    print('✗ chromadb missing:', e)
+    exit(1)
+"
+echo 'Running ingestion...'
 python -c "
 import sys
 from pathlib import Path

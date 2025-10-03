@@ -19,13 +19,18 @@ RUN pip install poetry==1.8.3
 WORKDIR /app
 
 # Copy Poetry files
-COPY pyproject.toml ./
-RUN test -f poetry.lock || poetry lock --no-update
-COPY poetry.lock* ./
+COPY pyproject.toml poetry.lock ./
+# Ensure lock file is up to date
+RUN poetry lock --check || poetry lock --no-update
 
 # Install Python dependencies (only main dependencies, no dev)
 RUN poetry config virtualenvs.create false \
-    && poetry install --only main --no-root --no-interaction --no-ansi
+    && echo "Installing Python dependencies..." \
+    && poetry install --only main --no-root --no-interaction --no-ansi \
+    && echo "Verifying PyYAML installation..." \
+    && python -c "import yaml; print('PyYAML successfully installed')" \
+    && echo "Verifying other key packages..." \
+    && python -c "import chromadb; print('chromadb available')"
 
 # Copy application code
 COPY mcp/ ./mcp/
