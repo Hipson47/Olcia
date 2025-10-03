@@ -21,11 +21,12 @@ jobs:
       run: |
         curl -sSL https://install.python-poetry.org | python3 -
         echo "$HOME/.local/bin" >> $GITHUB_PATH
+        poetry --version
 
     - name: Install dependencies
       run: |
         poetry config virtualenvs.create false
-        poetry install --no-interaction --no-ansi
+        poetry install --no-root --no-interaction --no-ansi
 
     - name: Run Ruff linter
       run: poetry run ruff check .
@@ -55,54 +56,15 @@ jobs:
     - name: Build Docker image for E2E
       run: docker build -t mcp-rag:e2e .
 
-    - name: Create sample knowledge file
-      run: |
-        mkdir -p knowledge
-        cat > knowledge/e2e_sample.md << 'EOF'
-        # E2E Test Document
-
-        This is a test document for end-to-end testing of the MCP+RAG system.
-
-        ## Features
-
-        - Vector search using ChromaDB
-        - JSON-RPC communication
-        - Document ingestion pipeline
-        - Semantic search capabilities
-
-        ## Architecture
-
-        The system consists of:
-        1. MCP server for protocol handling
-        2. ChromaDB for vector storage
-        3. Sentence transformers for embeddings
-        4. RAG ingestion pipeline
-        EOF
-
     - name: Run E2E test in container
       run: |
-        # Ingest the sample document
-        echo "Ingesting sample document..."
-        docker run --rm \
-          -v "$(pwd)/knowledge:/app/knowledge" \
-          -v "$(pwd)/rag/store:/app/rag/store" \
-          mcp-rag:e2e \
-          python -c "
-        import sys
-        sys.path.insert(0, '.')
-        from rag.ingest import RAGIngestor
-        ingestor = RAGIngestor(persist_directory='rag/store')
-        result = ingestor.ingest_directory('knowledge')
-        print(f'Ingestion result: {result}')
-        exit(0 if any(r.get('status') == 'success' for r in result) else 1)
-        "
+        echo "Running E2E test..."
 
-    - name: Query via JSON-RPC
-      run: |
-        echo "Testing JSON-RPC search..."
-        echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"rag.search","arguments":{"query":"MCP system architecture","k":2}}}' | \
-        docker run -i --rm \
+        # Copy the test script and run it in the container
+        docker run --rm \
+          -v "$(pwd)/scripts:/app/scripts" \
           -v "$(pwd)/knowledge:/app/knowledge" \
           -v "$(pwd)/rag/store:/app/rag/store" \
+          --entrypoint bash \
           mcp-rag:e2e \
-          python mcp/server.py
+          /app/scripts/ci_e2e_test.sh
