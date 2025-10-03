@@ -1,5 +1,7 @@
 # MCP+RAG Scaffolding
 
+[![CI](https://github.com/yourusername/olciamcp/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/olciamcp/actions/workflows/ci.yml)
+
 Windows-first Model Context Protocol server with ChromaDB integration for knowledge management and retrieval-augmented generation.
 
 ## 🏗️ Architecture
@@ -31,24 +33,26 @@ Windows-first Model Context Protocol server with ChromaDB integration for knowle
 
 ### Prerequisites
 - Windows 10/11
-- Python 3.8+ (from [python.org](https://python.org))
+- Python 3.11+ (from [python.org](https://python.org))
+- pipx (for Poetry installation)
 
 ### Setup Environment
 
-1. **Bootstrap the environment:**
+1. **Install Poetry:**
    ```powershell
-   pwsh -File scripts/bootstrap.ps1
+   pipx install poetry==1.7.1
    ```
 
-2. **Activate virtual environment:**
+2. **Install dependencies and create virtual environment:**
    ```powershell
-   .\venv\Scripts\Activate.ps1
+   poetry lock
+   poetry install --no-interaction --no-ansi
    ```
 
 3. **Verify installation:**
    ```powershell
-   python -V
-   python -c "import chromadb, mcp; print('✅ Dependencies ready')"
+   poetry run python -V
+   poetry run python -c "import chromadb, mcp; print('✅ Dependencies ready')"
    ```
 
 ### Validate Setup
@@ -57,14 +61,13 @@ Run these commands to ensure everything works:
 
 ```powershell
 # Test Python version
-python -V
+poetry run python -V
 
-# Test virtual environment activation
-.\venv\Scripts\Activate.ps1
-python -c "import sys; print(f'Python: {sys.version}')"
+# Test virtual environment
+poetry run python -c "import sys; print(f'Python: {sys.version}')"
 
 # Test MCP server (should start without errors)
-python mcp/server.py <nul
+poetry run python mcp/server.py <nul
 # (Ctrl+C to stop)
 ```
 
@@ -85,6 +88,40 @@ echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "or
 # 4. Log a lesson learned
 echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "memory.log", "arguments": {"event": "Database timeout issue", "detail": "ChromaDB timed out on first query", "hint": "Pre-initialize embeddings"}}}' | python mcp/server.py
 ```
+
+## 🐳 Docker Quick Start
+
+For containerized development and testing:
+
+### Prerequisites
+- Docker Desktop installed and running
+- Docker Compose V2
+
+### Run with Docker Compose
+
+1. **Build and start the service:**
+   ```bash
+   docker compose up --build
+   ```
+
+2. **Test the MCP server interactively:**
+   ```bash
+   # In another terminal, test JSON-RPC communication
+   echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | docker compose exec -T mcp python mcp/server.py
+   ```
+
+3. **Stop the service:**
+   ```bash
+   docker compose down
+   ```
+
+### Volume Mounts
+
+The Docker Compose setup mounts:
+- `./knowledge/` → `/app/knowledge/` (knowledge base documents)
+- `./rag/store/` → `/app/rag/store/` (ChromaDB vector storage)
+
+Changes to local files are reflected immediately in the container.
 
 ## 🛠️ Usage
 
@@ -132,8 +169,32 @@ EMBEDDING_MODEL=all-MiniLM-L6-v2
 
 Run tests with:
 ```powershell
-python -m pytest tests/
+poetry run pytest tests/
 ```
+
+Run quality checks:
+```powershell
+poetry run ruff check .
+poetry run mypy . --strict
+```
+
+### CI/CD
+
+The project uses GitHub Actions for continuous integration with three automated jobs:
+
+- **Lint + Unit**: Runs Ruff, MyPy, and unit tests (excluding E2E)
+- **Docker Build**: Builds the Docker image to ensure it compiles
+- **E2E**: Runs end-to-end tests in containerized environment
+
+#### Re-running CI
+
+To manually trigger CI checks:
+
+1. **Via GitHub UI**: Go to Actions tab → Select workflow → "Run workflow"
+2. **Via git push**: Push new commits to trigger automatic runs
+3. **Via PR**: Open/update a pull request to trigger checks
+
+CI runs automatically on pushes to `main`/`develop` branches and pull requests.
 
 ### Code Quality
 
@@ -279,19 +340,16 @@ python -c "from mcp.orchestrator import route_goal; print(route_goal('test'))"
 **Tests Fail on Fresh Clone**
 ```bash
 # Ensure clean environment
-pip install -r requirements.txt
-python -m pytest tests/ -v
+poetry install
+poetry run pytest tests/ -v
 ```
 
 **Quality Gates Fail**
 ```bash
-# Install linting tools
-pip install ruff mypy
-
 # Run individual checks
-ruff check .
-mypy . --strict
-python -m pytest tests/
+poetry run ruff check .
+poetry run mypy . --strict
+poetry run pytest tests/
 ```
 
 **Path Issues on Windows**
