@@ -7,20 +7,19 @@ Windows-first implementation with token-based chunking and file type support.
 import argparse
 import json
 import logging
-import os
 import sys
 import time
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any
 
 import yaml
 
 try:
     import chromadb
-    from chromadb.config import Settings
-    import tiktoken
-    from sentence_transformers import SentenceTransformer
     import fitz  # PyMuPDF
+    import tiktoken
+    from chromadb.config import Settings
+    from sentence_transformers import SentenceTransformer
 except ImportError as e:
     print(f"Missing dependency: {e}", file=sys.stderr)
     print("Run: pip install -r requirements.txt", file=sys.stderr)
@@ -53,7 +52,7 @@ class TextChunker:
         """Count tokens in text using tiktoken."""
         return len(self.encoding.encode(text))
 
-    def chunk_text(self, text: str) -> List[str]:
+    def chunk_text(self, text: str) -> list[str]:
         """
         Split text into chunks with token-based sizing and overlap.
 
@@ -179,12 +178,12 @@ class FileLoader:
 
     def _load_markdown(self, file_path: Path) -> str:
         """Load markdown file."""
-        with open(file_path, 'r', encoding=self.text_encoding) as f:
+        with open(file_path, encoding=self.text_encoding) as f:
             return f.read()
 
     def _load_json(self, file_path: Path) -> str:
         """Load JSON file and convert to readable text."""
-        with open(file_path, 'r', encoding=self.text_encoding) as f:
+        with open(file_path, encoding=self.text_encoding) as f:
             data = json.load(f)
 
         # Convert JSON to readable text representation
@@ -203,7 +202,7 @@ class FileLoader:
 class RAGIngestor:
     """Main RAG ingestion orchestrator with ChromaDB persistence."""
 
-    def __init__(self, config_path: Optional[Path] = None, persist_directory: Optional[str] = None):
+    def __init__(self, config_path: Path | None = None, persist_directory: str | None = None):
         """
         Initialize RAG ingestor.
 
@@ -215,7 +214,7 @@ class RAGIngestor:
         if config_path is None:
             config_path = Path(__file__).parent / "config.yaml"
 
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
 
         # Override persist directory if specified
@@ -280,7 +279,7 @@ class RAGIngestor:
             name=chroma_config['collection_name']
         )
 
-    def ingest_file(self, file_path: Path) -> Dict[str, Any]:
+    def ingest_file(self, file_path: Path) -> dict[str, Any]:
         """
         Ingest a single file into the RAG system.
 
@@ -346,7 +345,7 @@ class RAGIngestor:
             metadatas = []
             documents = []
 
-            for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+            for i, (chunk, _embedding) in enumerate(zip(chunks, embeddings, strict=False)):
                 chunk_id = f"{file_path.stem}_chunk_{i}"
                 metadata = base_metadata.copy()
                 metadata.update({
@@ -383,7 +382,7 @@ class RAGIngestor:
 
         return result
 
-    def ingest_directory(self, directory_path: Path) -> List[Dict[str, Any]]:
+    def ingest_directory(self, directory_path: Path) -> list[dict[str, Any]]:
         """
         Ingest all supported files in a directory.
 
@@ -481,7 +480,7 @@ def main():
         errors = sum(1 for r in all_results if r.get("status") == "error")
         skipped = sum(1 for r in all_results if r.get("status") == "skipped")
 
-        print(f"\nIngestion Summary:")
+        print("\nIngestion Summary:")
         print(f"  Successful: {successful}")
         print(f"  Errors: {errors}")
         print(f"  Skipped: {skipped}")

@@ -1,0 +1,8 @@
+services:
+  mcp:
+    build: .
+    volumes:
+      - ./knowledge:/app/knowledge
+      - ./rag/store:/app/rag/store
+    stdin_open: true
+    tty: true

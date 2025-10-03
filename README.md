@@ -1,6 +1,5 @@
 # MCP+RAG Scaffolding
 
-[![CI](https://github.com/yourusername/olciamcp/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/olciamcp/actions/workflows/ci.yml)
 
 Windows-first Model Context Protocol server with ChromaDB integration for knowledge management and retrieval-augmented generation.
 
@@ -43,16 +42,32 @@ Windows-first Model Context Protocol server with ChromaDB integration for knowle
    pipx install poetry==1.7.1
    ```
 
-2. **Install dependencies and create virtual environment:**
+2. **Generate lock file and install dependencies:**
    ```powershell
+   # Generate poetry.lock from pyproject.toml
    poetry lock
+
+   # Install dependencies in virtual environment
    poetry install --no-interaction --no-ansi
    ```
 
 3. **Verify installation:**
    ```powershell
+   # Check Python version in virtual environment
    poetry run python -V
+
+   # Test imports
    poetry run python -c "import chromadb, mcp; print('✅ Dependencies ready')"
+   ```
+
+4. **Run local tests:**
+   ```powershell
+   # Run unit tests (excluding E2E)
+   poetry run pytest tests/ -m "not e2e" --tb=short
+
+   # Run linting and type checking
+   poetry run ruff check .
+   poetry run mypy . --strict
    ```
 
 ### Validate Setup
@@ -89,6 +104,28 @@ echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "or
 echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "memory.log", "arguments": {"event": "Database timeout issue", "detail": "ChromaDB timed out on first query", "hint": "Pre-initialize embeddings"}}}' | python mcp/server.py
 ```
 
+### Automated E2E Scripts
+
+For automated end-to-end testing on Windows:
+
+**PowerShell (Recommended):**
+```powershell
+# Run complete E2E test (ingestion + JSON-RPC query)
+pwsh .\scripts\e2e.ps1
+```
+
+**Batch File (Fallback):**
+```batch
+# Run complete E2E test (ingestion + JSON-RPC query)
+.\scripts\e2e.bat
+```
+
+Both scripts automatically:
+- Create/verify test knowledge document (`knowledge/e2e.md`)
+- Run document ingestion pipeline
+- Test JSON-RPC search functionality
+- Validate responses and report results
+
 ## 🐳 Docker Quick Start
 
 For containerized development and testing:
@@ -97,7 +134,7 @@ For containerized development and testing:
 - Docker Desktop installed and running
 - Docker Compose V2
 
-### Run with Docker Compose
+### Using Docker Compose
 
 1. **Build and start the service:**
    ```bash
@@ -110,14 +147,42 @@ For containerized development and testing:
    echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | docker compose exec -T mcp python mcp/server.py
    ```
 
-3. **Stop the service:**
+3. **Run E2E tests in container:**
+   ```bash
+   docker compose exec mcp bash /app/scripts/ci_e2e_test.sh
+   ```
+
+4. **Stop the service:**
    ```bash
    docker compose down
    ```
 
+### Direct Docker Usage
+
+For one-off testing without compose:
+
+```bash
+# Build the image
+docker build -t mcp-rag:latest .
+
+# Run with volume mounts
+docker run --rm -v "$(pwd)/knowledge:/app/knowledge" -v "$(pwd)/rag/store:/app/rag/store" mcp-rag:latest python -c "
+import sys
+sys.path.insert(0, '.')
+from rag.ingest import RAGIngestor
+ingestor = RAGIngestor(persist_directory='store')
+result = ingestor.ingest_directory('knowledge')
+print(f'Ingestion: {result}')
+"
+
+# Test JSON-RPC
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"rag.search","arguments":{"query":"MCP system","k":2}}}' | \
+docker run -i --rm -v "$(pwd)/knowledge:/app/knowledge" -v "$(pwd)/rag/store:/app/rag/store" mcp-rag:latest python mcp/server.py
+```
+
 ### Volume Mounts
 
-The Docker Compose setup mounts:
+The Docker setup mounts:
 - `./knowledge/` → `/app/knowledge/` (knowledge base documents)
 - `./rag/store/` → `/app/rag/store/` (ChromaDB vector storage)
 
@@ -182,9 +247,28 @@ poetry run mypy . --strict
 
 The project uses GitHub Actions for continuous integration with three automated jobs:
 
-- **Lint + Unit**: Runs Ruff, MyPy, and unit tests (excluding E2E)
-- **Docker Build**: Builds the Docker image to ensure it compiles
-- **E2E**: Runs end-to-end tests in containerized environment
+#### Jobs Overview
+
+- **🔍 Lint + Unit** (`lint_unit`): Quality assurance for Python code
+  - Runs Ruff linter for code style and errors
+  - Executes MyPy type checker for static analysis
+  - Runs unit tests (excluding E2E) with pytest
+  - Uses Poetry for dependency management
+
+- **🐳 Docker Build** (`docker_build`): Container validation
+  - Builds Docker image from `Dockerfile`
+  - Verifies image creation and basic functionality
+  - Ensures containerized environment works
+
+- **🧪 E2E Tests** (`e2e`): Full pipeline validation
+  - Builds Docker image with E2E tag
+  - Creates sample knowledge document
+  - Runs document ingestion pipeline
+  - Tests JSON-RPC communication with search queries
+  - Validates response format and content
+
+#### CI Status
+
 
 #### Re-running CI
 
@@ -194,7 +278,9 @@ To manually trigger CI checks:
 2. **Via git push**: Push new commits to trigger automatic runs
 3. **Via PR**: Open/update a pull request to trigger checks
 
-CI runs automatically on pushes to `main`/`develop` branches and pull requests.
+CI runs automatically on:
+- Pushes to `main`/`develop` branches
+- Pull requests targeting `main`/`develop` branches
 
 ### Code Quality
 
@@ -323,6 +409,18 @@ python -c "import mcp.server; print('Imports OK')"
 pip list | grep -E "(chromadb|sentence|tiktoken)"
 ```
 
+**JSON-RPC Input Format Issues**
+```bash
+# Ensure proper JSON format (no trailing commas, correct quotes)
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | python mcp/server.py
+
+# For Windows PowerShell, use proper escaping
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | python mcp/server.py
+
+# Test with jq for validation (if available)
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | jq . | python mcp/server.py
+```
+
 **Tool Calls Fail**
 ```bash
 # Test individual components
@@ -334,6 +432,47 @@ python -c "from mcp.orchestrator import route_goal; print(route_goal('test'))"
 - Run ingestion first: `python rag/ingest.py --paths knowledge/`
 - Check ChromaDB files exist in `rag/store/`
 - Verify embeddings were generated (check logs for "Batches:" output)
+- Rebuild vector store: `rm -rf rag/store/ && python rag/ingest.py --paths knowledge/`
+
+**ChromaDB Schema Issues**
+```bash
+# If you see "no such column: collections.topic" errors
+rm -rf rag/store/
+python rag/ingest.py --paths knowledge/
+```
+
+### Docker-Specific Issues
+
+**Container Won't Start**
+```bash
+# Check Docker is running
+docker info
+
+# Test basic image build
+docker build -t test-build .
+
+# Check container logs
+docker run --rm mcp-rag:latest echo "Container works"
+```
+
+**Volume Mount Issues**
+```bash
+# Ensure correct paths for volume mounts
+docker run --rm -v "$(pwd)/knowledge:/app/knowledge" mcp-rag:latest ls -la /app/knowledge/
+
+# For Windows, use forward slashes in volume paths
+docker run --rm -v "C:/path/to/project/knowledge:/app/knowledge" mcp-rag:latest ls -la /app/knowledge/
+```
+
+**Compose Issues**
+```bash
+# Clean up and rebuild
+docker compose down
+docker compose up --build
+
+# Check service logs
+docker compose logs mcp
+```
 
 ### Development Issues
 

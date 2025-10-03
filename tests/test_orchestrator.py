@@ -5,7 +5,7 @@ Unit tests for MCP Orchestrator agent routing functionality.
 
 import unittest
 from unittest.mock import patch, MagicMock
-from typing import Dict, Any
+from typing import Any
 
 # Add current directory to path for imports
 import sys

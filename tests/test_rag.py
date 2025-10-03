@@ -372,6 +372,64 @@ class TestMCPServer(unittest.TestCase):
 
         asyncio.run(test())
 
+    def test_rate_limiting(self):
+        """Test that rate limiting works correctly."""
+        import asyncio
+        from mcp.server import MCPServer
+
+        server = MCPServer()
+
+        async def test():
+            # Test normal operation
+            message = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/list"
+            }
+
+            # Should work initially
+            response = await server.handle_message(message)
+            self.assertEqual(response["jsonrpc"], "2.0")
+            self.assertIn("result", response)
+
+            # Test rate limiting by making many requests quickly
+            for i in range(130):  # Exceed the 120 requests per minute limit
+                response = await server.handle_message(message)
+                if i > 120:
+                    # Should start getting rate limited
+                    if "error" in response:
+                        self.assertEqual(response["error"]["code"], -32001)
+                        break
+
+        asyncio.run(test())
+
+    def test_concurrent_requests(self):
+        """Test handling of concurrent requests."""
+        import asyncio
+        from mcp.server import MCPServer
+
+        server = MCPServer()
+
+        async def test():
+            async def make_request(req_id: int):
+                message = {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "method": "tools/list"
+                }
+                return await server.handle_message(message)
+
+            # Make multiple concurrent requests
+            tasks = [make_request(i) for i in range(10)]
+            responses = await asyncio.gather(*tasks)
+
+            # All should succeed (within rate limit)
+            for response in responses:
+                self.assertEqual(response["jsonrpc"], "2.0")
+                self.assertIn("result", response)
+
+        asyncio.run(test())
+
 
 if __name__ == '__main__':
     unittest.main()

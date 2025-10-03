@@ -49,7 +49,7 @@ class TestJSONRPCEndToEnd(unittest.TestCase):
         os.chdir(self.temp_dir)
 
         # Server process
-        self.server_process: Optional[subprocess.Popen] = None
+        self.server_process: subprocess.Popen | None = None
 
     def tearDown(self):
         """Clean up test fixtures."""

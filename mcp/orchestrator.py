@@ -4,10 +4,10 @@ MCP Orchestrator with Agent Routing
 Routes tasks to specialized agents based on goal analysis.
 """
 
-from typing import Dict, List, Any, Optional, NamedTuple
+import re
 from dataclasses import dataclass
 from enum import Enum
-import re
+from typing import Any
 
 
 class AgentType(Enum):
@@ -22,8 +22,8 @@ class AgentCapability:
     """Defines an agent's capabilities and routing criteria."""
     name: str
     description: str
-    keywords: List[str]
-    patterns: List[str]
+    keywords: list[str]
+    patterns: list[str]
     can_use_rag: bool = True
 
 
@@ -33,7 +33,7 @@ class RoutingResult:
     agent: AgentType
     confidence: float
     reasoning: str
-    steps: List[str]
+    steps: list[str]
 
 
 class AgentRouter:
@@ -99,11 +99,11 @@ class AgentRouter:
         )
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the agent router."""
         self.capabilities = self.AGENT_CAPABILITIES
 
-    def route_goal(self, goal: str, meta: Optional[Dict[str, Any]] = None) -> RoutingResult:
+    def route_goal(self, goal: str, meta: dict[str, Any] | None = None) -> RoutingResult:
         """
         Route a goal to the most appropriate agent.
 
@@ -125,7 +125,7 @@ class AgentRouter:
         # Analyze the goal and determine best agent
         return self._analyze_goal(goal.lower(), meta or {})
 
-    def _analyze_goal(self, goal: str, meta: Dict[str, Any]) -> RoutingResult:
+    def _analyze_goal(self, goal: str, meta: dict[str, Any]) -> RoutingResult:
         """
         Analyze goal content and route to appropriate agent.
 
@@ -195,7 +195,7 @@ class AgentRouter:
         return min(score, 1.0)  # Cap at 1.0
 
     def _generate_reasoning_and_steps(self, agent: AgentType, goal: str,
-                                    confidence: float, meta: Dict[str, Any]) -> tuple[str, List[str]]:
+                                    confidence: float, meta: dict[str, Any]) -> tuple[str, list[str]]:
         """
         Generate reasoning and recommended steps for the chosen agent.
 
@@ -239,7 +239,7 @@ class AgentRouter:
 
         return reasoning, steps
 
-    def get_available_agents(self) -> Dict[str, Dict[str, Any]]:
+    def get_available_agents(self) -> dict[str, dict[str, Any]]:
         """
         Get information about all available agents.
 
@@ -262,7 +262,7 @@ class AgentRouter:
 router = AgentRouter()
 
 
-def route_goal(goal: str, meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def route_goal(goal: str, meta: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Route a goal to an appropriate agent.
 

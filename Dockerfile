@@ -19,7 +19,9 @@ RUN pip install poetry==1.8.3
 WORKDIR /app
 
 # Copy Poetry files
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml ./
+RUN test -f poetry.lock || poetry lock --no-update
+COPY poetry.lock* ./
 
 # Install Python dependencies (only main dependencies, no dev)
 RUN poetry config virtualenvs.create false \
@@ -28,7 +30,6 @@ RUN poetry config virtualenvs.create false \
 # Copy application code
 COPY mcp/ ./mcp/
 COPY rag/ ./rag/
-COPY memory/ ./memory/
 
 # Create necessary directories
 RUN mkdir -p /app/knowledge /app/rag/store /app/memory

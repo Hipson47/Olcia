@@ -19,6 +19,15 @@ try {
     exit 1
 }
 
+# Check Poetry installation
+try {
+    $poetryVersion = poetry --version 2>&1
+    Write-Host "✅ Poetry found: $poetryVersion" -ForegroundColor Green
+} catch {
+    Write-Host "❌ Poetry not found. Please install Poetry from https://python-poetry.org" -ForegroundColor Red
+    exit 1
+}
+
 # Create virtual environment
 if (Test-Path $VenvPath) {
     if ($Force) {
@@ -46,9 +55,13 @@ Write-Host "🔧 Activating virtual environment..." -ForegroundColor Blue
 Write-Host "⬆️  Upgrading pip..." -ForegroundColor Blue
 python -m pip install --upgrade pip
 
-# Install requirements
-Write-Host "📚 Installing dependencies from requirements.txt..." -ForegroundColor Blue
-pip install -r requirements.txt
+# Generate/update poetry.lock if needed
+Write-Host "🔒 Ensuring poetry.lock is up to date..." -ForegroundColor Blue
+poetry lock --no-update
+
+# Install dependencies with Poetry
+Write-Host "📚 Installing dependencies with Poetry..." -ForegroundColor Blue
+poetry install --no-interaction --no-ansi
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Failed to install dependencies" -ForegroundColor Red

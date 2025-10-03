@@ -5,10 +5,11 @@ Provides append-only JSONL logging with simple, reliable format.
 """
 
 import json
+import sys
 import time
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, Any, Optional
-from dataclasses import dataclass, asdict
+from typing import Any
 
 
 @dataclass
@@ -17,9 +18,9 @@ class MemoryEntry:
     timestamp: float
     event: str
     detail: str
-    hint: Optional[str] = None
+    hint: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return asdict(self)
 
@@ -51,7 +52,7 @@ class MemoryLogger:
         if not self.mistakes_file.exists():
             self.mistakes_file.touch()
 
-    def log_error(self, event: str, detail: str, hint: Optional[str] = None) -> bool:
+    def log_error(self, event: str, detail: str, hint: str | None = None) -> bool:
         """
         Log an error or lesson learned to the mistakes file.
 
@@ -78,12 +79,12 @@ class MemoryLogger:
 
             return True
 
-        except Exception:
-            # Fail silently to avoid disrupting the main application
-            # In a production system, you might want to log this to stderr
+        except Exception as e:
+            # Log error for debugging but don't crash the application
+            print(f"Warning: Failed to log memory entry '{event}': {e}", file=sys.stderr)
             return False
 
-    def get_recent_entries(self, limit: int = 10) -> list:
+    def get_recent_entries(self, limit: int = 10) -> list[dict[str, Any]]:
         """
         Get the most recent memory entries.
 
@@ -95,7 +96,7 @@ class MemoryLogger:
         """
         try:
             entries = []
-            with open(self.mistakes_file, 'r', encoding='utf-8') as f:
+            with open(self.mistakes_file, encoding='utf-8') as f:
                 for line in f:
                     if line.strip():
                         try:
@@ -119,7 +120,7 @@ mistakes_file = Path(__file__).parent.parent / "memory" / "mistakes.jsonl"
 memory_logger = MemoryLogger(mistakes_file)
 
 
-def log_memory(event: str, detail: str, hint: Optional[str] = None) -> Dict[str, Any]:
+def log_memory(event: str, detail: str, hint: str | None = None) -> dict[str, Any]:
     """
     Log a memory entry (main entry point for the memory.log tool).
 

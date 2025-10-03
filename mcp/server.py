@@ -6,10 +6,11 @@ Windows-first MCP server with ChromaDB integration for knowledge management.
 
 import asyncio
 import json
-import sys
 import os
-from typing import Any, Dict, List, Optional
+import sys
+import time
 from pathlib import Path
+from typing import Any
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,11 +18,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     import chromadb
     from chromadb.config import Settings
-    from sentence_transformers import SentenceTransformer
     from dotenv import load_dotenv
-    from rag.ingest import RAGIngestor
-    from mcp.orchestrator import route_goal
+    from sentence_transformers import SentenceTransformer
+
     from mcp.memory import log_memory
+    from mcp.orchestrator import route_goal
+    from rag.ingest import RAGIngestor
 except ImportError as e:
     print(f"Missing dependency: {e}", file=sys.stderr)
     sys.exit(1)
@@ -29,8 +31,34 @@ except ImportError as e:
 # Load environment variables
 load_dotenv()
 
+
+class SimpleRateLimiter:
+    """Simple token bucket rate limiter for API protection."""
+
+    def __init__(self, requests_per_minute: int = 60):
+        self.requests_per_minute = requests_per_minute
+        self.requests: list[float] = []
+        self.lock = asyncio.Lock()
+
+    async def is_allowed(self) -> bool:
+        """Check if request is allowed under rate limit."""
+        async with self.lock:
+            current_time = time.time()
+
+            # Remove requests older than 1 minute
+            self.requests = [req_time for req_time in self.requests
+                           if current_time - req_time < 60]
+
+            # Check if under limit
+            if len(self.requests) < self.requests_per_minute:
+                self.requests.append(current_time)
+                return True
+
+            return False
+
+
 class RAGServer:
-    def __init__(self):
+    def __init__(self) -> None:
         self.store_path = Path("rag/store")
         self.store_path.mkdir(parents=True, exist_ok=True)
 
@@ -54,11 +82,11 @@ class RAGServer:
             metadata={"description": "Conversation context and memory"}
         )
 
-    def get_embedding(self, text: str) -> List[float]:
+    def get_embedding(self, text: str) -> list[float]:
         """Generate embedding for text."""
         return self.embedding_model.encode(text).tolist()
 
-    def add_knowledge(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> str:
+    def add_knowledge(self, content: str, metadata: dict[str, Any] | None = None) -> str:
         """Add content to knowledge base."""
         if metadata is None:
             metadata = {}
@@ -75,7 +103,7 @@ class RAGServer:
 
         return doc_id
 
-    def search_knowledge(self, query: str, n_results: int = 5) -> List[Dict[str, Any]]:
+    def search_knowledge(self, query: str, n_results: int = 5) -> list[dict[str, Any]]:
         """Search knowledge base for relevant content."""
         query_embedding = self.get_embedding(query)
 
@@ -86,14 +114,14 @@ class RAGServer:
 
         # Format results
         formatted_results = []
-        for i, (doc_id, document, metadata, distance) in enumerate(zip(
+        for _i, (_doc_id, document, metadata, distance) in enumerate(zip(
             results['ids'][0] if results['ids'] else [],
             results['documents'][0] if results['documents'] else [],
             results['metadatas'][0] if results['metadatas'] else [],
-            results['distances'][0] if results['distances'] else []
+            results['distances'][0] if results['distances'] else [], strict=False
         )):
             formatted_results.append({
-                "id": doc_id,
+                "id": _doc_id,
                 "content": document,
                 "metadata": metadata,
                 "relevance_score": 1.0 - distance  # Convert distance to similarity score
@@ -101,7 +129,7 @@ class RAGServer:
 
         return formatted_results
 
-    def search_knowledge_chunks(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
+    def search_knowledge_chunks(self, query: str, k: int = 5) -> list[dict[str, Any]]:
         """Search knowledge base and return chunks with text, path, idx, score."""
         query_embedding = self.get_embedding(query)
 
@@ -112,11 +140,11 @@ class RAGServer:
 
         # Format results as chunks
         chunks = []
-        for i, (doc_id, document, metadata, distance) in enumerate(zip(
+        for _i, (_doc_id, document, metadata, distance) in enumerate(zip(
             results['ids'][0] if results['ids'] else [],
             results['documents'][0] if results['documents'] else [],
             results['metadatas'][0] if results['metadatas'] else [],
-            results['distances'][0] if results['distances'] else []
+            results['distances'][0] if results['distances'] else [], strict=False
         )):
             chunks.append({
                 "text": document,
@@ -141,7 +169,7 @@ class RAGServer:
 
         return mem_id
 
-    def search_memory(self, query: str, n_results: int = 3) -> List[Dict[str, Any]]:
+    def search_memory(self, query: str, n_results: int = 3) -> list[dict[str, Any]]:
         """Search conversation memory."""
         query_embedding = self.get_embedding(query)
 
@@ -151,11 +179,11 @@ class RAGServer:
         )
 
         formatted_results = []
-        for i, (mem_id, document, metadata, distance) in enumerate(zip(
+        for _i, (mem_id, document, metadata, distance) in enumerate(zip(
             results['ids'][0] if results['ids'] else [],
             results['documents'][0] if results['documents'] else [],
             results['metadatas'][0] if results['metadatas'] else [],
-            results['distances'][0] if results['distances'] else []
+            results['distances'][0] if results['distances'] else [], strict=False
         )):
             formatted_results.append({
                 "id": mem_id,
@@ -167,9 +195,10 @@ class RAGServer:
         return formatted_results
 
 class MCPServer:
-    def __init__(self):
+    def __init__(self) -> None:
         self.rag_server = RAGServer()
         self.rag_ingestor = None  # Lazy initialization
+        self.rate_limiter = SimpleRateLimiter(requests_per_minute=120)  # 120 requests per minute
         self.tools = {
             "add_knowledge": {
                 "name": "add_knowledge",
@@ -325,8 +354,19 @@ class MCPServer:
             }
         }
 
-    async def handle_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_message(self, message: dict[str, Any]) -> dict[str, Any]:
         """Handle incoming MCP messages."""
+        # Check rate limit
+        if not await self.rate_limiter.is_allowed():
+            return {
+                "jsonrpc": "2.0",
+                "id": message.get("id"),
+                "error": {
+                    "code": -32001,
+                    "message": "Rate limit exceeded. Please wait before making more requests."
+                }
+            }
+
         msg_id = message.get("id")
         method = message.get("method")
 
@@ -386,7 +426,7 @@ class MCPServer:
             }
         }
 
-    async def call_tool(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    async def call_tool(self, tool_name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Execute a tool with given arguments."""
         if tool_name == "add_knowledge":
             doc_id = self.rag_server.add_knowledge(
@@ -444,7 +484,7 @@ class MCPServer:
         else:
             raise ValueError(f"Unknown tool: {tool_name}")
 
-    def ingest_files(self, paths: List[str]) -> Dict[str, Any]:
+    def ingest_files(self, paths: list[str]) -> dict[str, Any]:
         """Ingest files into the RAG knowledge base."""
         try:
             # Initialize ingestor if needed

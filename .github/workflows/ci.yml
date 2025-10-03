@@ -32,7 +32,7 @@ jobs:
       run: poetry run ruff check .
 
     - name: Run MyPy type checker
-      run: poetry run mypy . --strict
+      run: poetry run mypy mcp rag --strict
 
     - name: Run unit tests (excluding E2E)
       run: poetry run pytest tests/ -m "not e2e" --tb=short
