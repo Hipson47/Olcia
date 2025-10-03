@@ -95,7 +95,7 @@ class RAGServer:
         doc_id = f"doc_{len(self.knowledge_collection.get()['ids']) + 1}"
 
         self.knowledge_collection.add(
-            embeddings=[embedding],
+            embeddings=embedding,
             documents=[content],
             metadatas=[metadata],
             ids=[doc_id]
@@ -108,7 +108,7 @@ class RAGServer:
         query_embedding = self.get_embedding(query)
 
         results = self.knowledge_collection.query(
-            query_embeddings=[query_embedding],
+            query_embeddings=query_embedding,
             n_results=n_results
         )
 
@@ -134,7 +134,7 @@ class RAGServer:
         query_embedding = self.get_embedding(query)
 
         results = self.knowledge_collection.query(
-            query_embeddings=[query_embedding],
+            query_embeddings=query_embedding,
             n_results=k
         )
 
@@ -161,7 +161,7 @@ class RAGServer:
         mem_id = f"mem_{len(self.memory_collection.get()['ids']) + 1}"
 
         self.memory_collection.add(
-            embeddings=[embedding],
+            embeddings=embedding,
             documents=[content],
             metadatas=[{"context": context, "timestamp": str(asyncio.get_event_loop().time())}],
             ids=[mem_id]
@@ -174,7 +174,7 @@ class RAGServer:
         query_embedding = self.get_embedding(query)
 
         results = self.memory_collection.query(
-            query_embeddings=[query_embedding],
+            query_embeddings=query_embedding,
             n_results=n_results
         )
 
@@ -197,7 +197,7 @@ class RAGServer:
 class MCPServer:
     def __init__(self) -> None:
         self.rag_server = RAGServer()
-        self.rag_ingestor = None  # Lazy initialization
+        self.rag_ingestor: RAGIngestor | None = None  # Lazy initialization
         self.rate_limiter = SimpleRateLimiter(requests_per_minute=120)  # 120 requests per minute
         self.tools = {
             "add_knowledge": {
@@ -525,7 +525,7 @@ class MCPServer:
                 "error": str(e)
             }
 
-async def main():
+async def main() -> None:
     """Main MCP server loop."""
     server = MCPServer()
 

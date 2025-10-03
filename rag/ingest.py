@@ -139,7 +139,7 @@ class FileLoader:
         self.max_file_size_mb = max_file_size_mb
         self.text_encoding = text_encoding
 
-    def load_file(self, file_path: Path) -> str:
+    def load_file(self, file_path: str | Path) -> str:
         """
         Load content from file based on extension.
 
@@ -229,7 +229,7 @@ class RAGIngestor:
         self._init_embedding_model()
         self._init_chroma_client()
 
-    def _setup_logging(self):
+    def _setup_logging(self) -> None:
         """Setup logging configuration."""
         log_config = self.config.get('logging', {})
         logging.basicConfig(
@@ -238,7 +238,7 @@ class RAGIngestor:
         )
         self.logger = logging.getLogger(__name__)
 
-    def _init_chunker(self):
+    def _init_chunker(self) -> None:
         """Initialize text chunker."""
         chunk_config = self.config['ingestion']['chunking']
         self.chunker = TextChunker(
@@ -247,7 +247,7 @@ class RAGIngestor:
             encoding_model=chunk_config['encoding_model']
         )
 
-    def _init_file_loader(self):
+    def _init_file_loader(self) -> None:
         """Initialize file loader."""
         process_config = self.config['ingestion']['processing']
         self.file_loader = FileLoader(
@@ -255,7 +255,7 @@ class RAGIngestor:
             text_encoding=process_config['text_encoding']
         )
 
-    def _init_embedding_model(self):
+    def _init_embedding_model(self) -> None:
         """Initialize sentence transformer model."""
         embed_config = self.config['ingestion']['embedding']
         self.logger.info(f"Loading embedding model: {embed_config['model_name']}")
@@ -264,7 +264,7 @@ class RAGIngestor:
             device=embed_config['device']
         )
 
-    def _init_chroma_client(self):
+    def _init_chroma_client(self) -> None:
         """Initialize ChromaDB client."""
         chroma_config = self.config['ingestion']['chroma']
         persist_dir = Path(__file__).parent / chroma_config['persist_directory']
@@ -350,8 +350,8 @@ class RAGIngestor:
                 chunk_id = f"{file_path.stem}_chunk_{i}"
                 metadata = base_metadata.copy()
                 metadata.update({
-                    "chunk_index": i,
-                    "total_chunks": len(chunks)
+                    "chunk_index": str(i),
+                    "total_chunks": str(len(chunks))
                 })
 
                 ids.append(chunk_id)
@@ -367,7 +367,7 @@ class RAGIngestor:
             self.collection.add(
                 embeddings=embedding_list,
                 documents=documents,
-                metadatas=metadatas,
+                metadatas=metadatas,  # type: ignore[arg-type]
                 ids=ids
             )
 
@@ -425,7 +425,7 @@ class RAGIngestor:
         return Path(path).resolve()
 
 
-def main():
+def main() -> None:
     """Command line interface for RAG ingestion."""
     parser = argparse.ArgumentParser(description="RAG Ingestion System")
     parser.add_argument(

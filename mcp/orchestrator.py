@@ -220,9 +220,10 @@ class AIAgentRouter:
             {"role": "user", "content": f"Please analyze this development goal and route it to the most appropriate agent. Use the provided knowledge context when available:\n\n{context}"}
         ]
 
-        response = await self.client.chat.completions.create(
-            model="gpt-4o-mini",
+        assert self.client is not None, "OpenAI client not initialized"
+        response = await self.client.chat.completions.create(  # type: ignore[call-overload]
             messages=messages,
+            model="gpt-4o-mini",
             temperature=0.3,  # Balanced creativity and consistency
             max_tokens=1000,
             response_format={"type": "json_object"}
