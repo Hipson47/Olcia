@@ -38,10 +38,10 @@ python -c "
 import sys
 print('Python path:', sys.path[:3])
 try:
-    import yaml
-    print('✓ yaml module available')
+    from ruamel.yaml import YAML
+    print('✓ ruamel.yaml module available')
 except ImportError as e:
-    print('✗ yaml module missing:', e)
+    print('✗ ruamel.yaml module missing:', e)
     exit(1)
 
 try:

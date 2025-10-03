@@ -10,6 +10,8 @@ ENV PYTHONUNBUFFERED=1 \
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
+    libyaml-dev \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry
@@ -27,10 +29,24 @@ RUN poetry lock --check || poetry lock --no-update
 RUN poetry config virtualenvs.create false \
     && echo "Installing Python dependencies..." \
     && poetry install --only main --no-root --no-interaction --no-ansi \
-    && echo "Verifying PyYAML installation..." \
-    && python -c "import yaml; print('PyYAML successfully installed')" \
-    && echo "Verifying other key packages..." \
-    && python -c "import chromadb; print('chromadb available')"
+    && echo "Dependencies installed. Verifying key packages..." \
+    && python -c "
+try:
+    from ruamel.yaml import YAML
+    print('✓ ruamel.yaml successfully installed')
+except ImportError as e:
+    print('✗ ruamel.yaml failed:', e)
+    exit(1)
+
+try:
+    import chromadb
+    print('✓ chromadb available')
+except ImportError as e:
+    print('✗ chromadb failed:', e)
+    exit(1)
+
+print('All key dependencies verified!')
+"
 
 # Copy application code
 COPY mcp/ ./mcp/

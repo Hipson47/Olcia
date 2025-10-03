@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-import yaml
+from ruamel.yaml import YAML
 
 try:
     import chromadb
@@ -214,8 +214,9 @@ class RAGIngestor:
         if config_path is None:
             config_path = Path(__file__).parent / "config.yaml"
 
+        yaml_loader = YAML()
         with open(config_path, encoding='utf-8') as f:
-            self.config = yaml.safe_load(f)
+            self.config = yaml_loader.load(f)
 
         # Override persist directory if specified
         if persist_directory:
