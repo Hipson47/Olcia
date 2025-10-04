@@ -76,6 +76,8 @@ module = [
     "sentence_transformers.*",
     "tiktoken.*",
     "fitz.*",
+    "ruamel.yaml",
+    "openai",
 ]
 ignore_missing_imports = true
 

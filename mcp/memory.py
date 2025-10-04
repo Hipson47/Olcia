@@ -36,7 +36,7 @@ class MemoryLogger:
     - Path validation and creation
     """
 
-    def __init__(self, mistakes_file: Path):
+    def __init__(self, mistakes_file: Path) -> None:
         """
         Initialize memory logger.
 

@@ -29,7 +29,7 @@ except ImportError as e:
 class TextChunker:
     """Token-based text chunker with configurable overlap."""
 
-    def __init__(self, chunk_size: int = 350, overlap_percent: float = 0.2, encoding_model: str = "cl100k_base"):
+    def __init__(self, chunk_size: int = 350, overlap_percent: float = 0.2, encoding_model: str = "cl100k_base") -> None:
         """
         Initialize text chunker.
 
@@ -128,7 +128,7 @@ class TextChunker:
 class FileLoader:
     """Load content from different file types."""
 
-    def __init__(self, max_file_size_mb: int = 50, text_encoding: str = "utf-8"):
+    def __init__(self, max_file_size_mb: int = 50, text_encoding: str = "utf-8") -> None:
         """
         Initialize file loader.
 
@@ -202,7 +202,7 @@ class FileLoader:
 class RAGIngestor:
     """Main RAG ingestion orchestrator with ChromaDB persistence."""
 
-    def __init__(self, config_path: Path | None = None, persist_directory: str | None = None):
+    def __init__(self, config_path: Path | None = None, persist_directory: str | None = None) -> None:
         """
         Initialize RAG ingestor.
 

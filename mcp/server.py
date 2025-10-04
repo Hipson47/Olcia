@@ -10,7 +10,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -35,7 +35,7 @@ load_dotenv()
 class SimpleRateLimiter:
     """Simple token bucket rate limiter for API protection."""
 
-    def __init__(self, requests_per_minute: int = 60):
+    def __init__(self, requests_per_minute: int = 60) -> None:
         self.requests_per_minute = requests_per_minute
         self.requests: list[float] = []
         self.lock = asyncio.Lock()
@@ -91,13 +91,16 @@ class RAGServer:
         if metadata is None:
             metadata = {}
 
+        # Convert all metadata values to strings for ChromaDB compatibility
+        string_metadata = {key: str(value) for key, value in metadata.items()}
+
         embedding = self.get_embedding(content)
         doc_id = f"doc_{len(self.knowledge_collection.get()['ids']) + 1}"
 
         self.knowledge_collection.add(
-            embeddings=embedding,
+            embeddings=[embedding],
             documents=[content],
-            metadatas=[metadata],
+            metadatas=[string_metadata],
             ids=[doc_id]
         )
 
@@ -161,7 +164,7 @@ class RAGServer:
         mem_id = f"mem_{len(self.memory_collection.get()['ids']) + 1}"
 
         self.memory_collection.add(
-            embeddings=embedding,
+            embeddings=[embedding],
             documents=[content],
             metadatas=[{"context": context, "timestamp": str(asyncio.get_event_loop().time())}],
             ids=[mem_id]
@@ -197,7 +200,7 @@ class RAGServer:
 class MCPServer:
     def __init__(self) -> None:
         self.rag_server = RAGServer()
-        self.rag_ingestor: RAGIngestor | None = None  # Lazy initialization
+        self.rag_ingestor: Optional[RAGIngestor] = None  # Lazy initialization
         self.rate_limiter = SimpleRateLimiter(requests_per_minute=120)  # 120 requests per minute
         self.tools = {
             "add_knowledge": {
