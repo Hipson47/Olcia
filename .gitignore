@@ -1,0 +1,107 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+.secrets
+*.key
+*.pem
+credentials.json
+**/credentials.json
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+.cache/
+.tmp/
+
+# Large binary files and archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Database and storage files
+chroma.sqlite3
+*.db
+*.sqlite
+*.sqlite3
+
+# Node modules (if any)
+node_modules/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Knowledge base - keep only test files
+knowledge/
+!knowledge/sample_documentation.md
+!knowledge/sample_config.json
+
+# RAG store - local database files
+rag/store/
+rag/**/*.bin
+rag/**/*.pickle
+
+# Memory files - should not be committed
+memory/mistakes.jsonl
+memory/reflexion.md
+
+# Scripts and bootstrap artifacts
+scripts/bootstrap_artifacts/
+
+# Windows PowerShell
+*.ps1~
+
