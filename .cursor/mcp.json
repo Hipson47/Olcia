@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "rag-server": {
+    "olcia-ai-agent": {
       "command": "python",
       "args": ["mcp/server.py"],
       "env": {
