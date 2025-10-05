@@ -2,9 +2,9 @@
   "mcpServers": {
     "olcia-ai-agent": {
       "command": "python",
-      "args": [".cursor/mcp/server.py"],
+      "args": ["C:\\github\\insta\\Olcia\\.cursor\\mcp\\server.py"],
       "env": {
-        "PYTHONPATH": "."
+        "PYTHONPATH": "C:\\github\\insta\\Olcia\\.cursor"
       }
     }
   }

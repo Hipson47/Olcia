@@ -1,70 +1,45 @@
-# Feature Implementation
+# Feature Implementation (OLCIA)
 
-Add a new feature to the MCP+RAG system with complete implementation, testing, and documentation.
+Add a new feature leveraging MCP+RAG and the assistant’s automatic tools.
 
-## Scope
+## Plan (8 steps)
 
-**Feature Description:** [Brief description of the feature to implement]
+1) 🔍 `auto_context_search` – gather context (similar implementations, best practices, lessons)
+2) 🧠 `track_user_preferences(retrieve, ...)` – align with user style
+3) 🏗️ Implement – minimal diff, types, validation
+4) 💡 `suggest_improvements` – code review (security/perf/maint/testing)
+5) 🧪 Tests – unit + integration
+6) 📚 Docs – README + KB (`add_knowledge` for patterns)
+7) 🔁 E2E with MCP – `tools/list`, `tools/call`
+8) ✅ Quality gates – ruff, mypy, pytest
 
-**Files to modify/create:**
-- `mcp/server.py` - Add new MCP tools or extend existing ones
-- `mcp/[feature_module].py` - New feature implementation
-- `tests/test_[feature].py` - Feature tests
-- `README.md` - Update documentation
-- `knowledge/` - Add relevant documentation if needed
+## Acceptance criteria
 
-**Files to reference:**
-- `@mcp/server.py` - Current MCP tool structure
-- `@tests/` - Existing test patterns
-- `@rag/` - RAG system integration points
-- `@requirements.txt` - Dependency management
+- Requirements implemented with no regressions
+- Quality gates pass
+- MCP tools used (at least `auto_context_search` + `suggest_improvements`)
+- Patterns added to KB; preferences updated; `memory.log` filled
 
-## Implementation Plan (8 steps)
-
-1. **Analyze requirements** - Understand feature scope and integration points
-2. **Design API/interface** - Define MCP tool schemas and function signatures
-3. **Implement core logic** - Create feature module with business logic
-4. **Add MCP integration** - Wire feature into MCP server tools
-5. **Write comprehensive tests** - Unit and integration tests
-6. **Update documentation** - README and inline documentation
-7. **Test integration** - End-to-end testing with MCP protocol
-8. **Quality assurance** - Run all quality gates
-
-## Acceptance Criteria
-
-- ✅ Feature implements specified requirements completely
-- ✅ New MCP tools follow JSON-RPC schema standards
-- ✅ All tests pass including new feature tests
-- ✅ Quality gates pass: ruff, mypy, pytest
-- ✅ Documentation updated with usage examples
-- ✅ Feature integrates cleanly with existing RAG system
-- ✅ No regressions in existing functionality
-- ✅ MCP server starts and serves new tools correctly
-
-## Commands to Run
+## Commands
 
 ```bash
-# Development workflow
-python -m pytest tests/ -v  # Run tests after each major change
-ruff check .               # Code quality check
-mypy . --strict           # Type checking
+# Context for the feature
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auto_context_search","arguments":{"task_description":"[desc]","task_type":"implement"}}}' | python .cursor/mcp/server.py
 
-# Feature testing
-echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | python mcp/server.py
-# Should show new tool in the list
+# Code review
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"suggest_improvements","arguments":{"code":"<CODE>","focus_areas":["security","maintainability","testing"]}}}' | python .cursor/mcp/server.py
 
-# Specific feature testing
-echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "[new_tool]", "arguments": {...}}}' | python mcp/server.py
+# Preferences
+echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"track_user_preferences","arguments":{"action":"store","preference_key":"coding_style","preference_value":"clean_code"}}}' | python .cursor/mcp/server.py
 
-# Full integration test
-python -m pytest tests/test_[feature].py -v
+# Tests
+pytest -v
+ruff check .
+mypy . --strict
 ```
 
 ## Notes
 
-- Follow strict Plan→Code→Test→Review workflow
-- Keep changes minimal and atomic - one feature at a time
-- Add comprehensive error handling and logging
-- Update memory/reflexion.md with lessons learned
-- Test on Windows PowerShell environment
-- Document any new dependencies or configuration requirements
+- Always start with RAG + memory context
+- Treat `suggest_improvements` as automated code review
+- Document important decisions in KB (`add_knowledge`) and `memory.log`

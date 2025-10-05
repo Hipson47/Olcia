@@ -14,6 +14,8 @@ from typing import Any, Optional
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Also add the .cursor directory to ensure imports work from different CWD
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     import chromadb
@@ -29,7 +31,7 @@ except ImportError as e:
     sys.exit(1)
 
 # Load environment variables
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
 
 
 class SimpleRateLimiter:

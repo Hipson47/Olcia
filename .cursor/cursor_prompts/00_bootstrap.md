@@ -1,85 +1,51 @@
-# Bootstrap Project Setup
+# Bootstrap MCP+RAG (OLCIA)
 
-Initialize a new MCP+RAG project with complete scaffolding and environment setup.
-
-## Recommended AI Model: Claude 3.5 Sonnet
-
-For the main agent controlling the RAG system, **Claude 3.5 Sonnet** is the recommended model because:
-
-### Why Claude 3.5 Sonnet?
-- **Superior code understanding** - Better at Python, architecture analysis, and code generation than GPT models
-- **Excellent reasoning** - Strong Chain-of-Thought capabilities for decision making
-- **Long context window** - Can handle complex RAG contexts and conversation history
-- **Cost-effective** - Lower cost per token than GPT-4o while maintaining high quality
-- **Agent-friendly** - Designed for tool use and multi-step reasoning tasks
-
-### Integration Points:
-- Replace `gpt-4o-mini` in `mcp/orchestrator.py` with `claude-3-5-sonnet-20241022`
-- Use Anthropic API instead of OpenAI for main agent decisions
-- Keep GPT-4o-mini for lightweight tasks if needed
-
-### Expected Benefits:
-- Better code quality and architectural decisions
-- More accurate RAG context utilization
-- Improved multi-step task planning
-- Enhanced error handling and debugging capabilities
+Quick-start guide for an always-on OLCIA agent (MCP+RAG) ready to use tools automatically.
 
 ## Scope
 
-**Files to create/modify:**
-- `requirements.txt` - Python dependencies
-- `pyproject.toml` - Project configuration
-- `README.md` - Project documentation
-- `.cursor/` - Cursor IDE configuration
-- `mcp/server.py` - MCP server implementation
-- `tests/` - Test suite structure
-- `scripts/bootstrap.ps1` - Environment setup script
+- MCP Server (`.cursor/mcp/server.py`) – stdio JSON-RPC, RAG (ChromaDB), Memory
+- MCP Tools – including: `auto_context_search`, `suggest_improvements`, `track_user_preferences`, `analyze_project_context`
+- Cursor config (`.cursor/mcp.json`)
+- Prompts & rules tuned for automatic MCP/RAG usage
 
-**Folders to create:**
-- `knowledge/` - Knowledge base storage
-- `memory/` - Error memory and reflections
-- `rag/store/` - Vector database storage
-- `tests/` - Test files
+## Plan (4 steps)
 
-## Implementation Plan (7 steps)
+1) Environment: Python 3.11+, Poetry, `.env` with keys (OPENAI_API_KEY/ANTHROPIC_API_KEY)
+2) MCP Server: run and verify initialize/tools list
+3) Knowledge ingest: `knowledge/` → RAG (`rag.ingest`)
+4) Quality gates: ruff, mypy, pytest
 
-1. **Create project structure** - Set up directories and basic files
-2. **Configure dependencies** - Add Python packages to requirements.txt
-3. **Implement MCP server** - Create basic stdio server with tool scaffolding
-4. **Add RAG components** - Basic ChromaDB integration and file loading
-5. **Create bootstrap script** - PowerShell script for environment setup
-6. **Add test infrastructure** - Basic test structure and fixtures
-7. **Update documentation** - README and configuration files
+## Acceptance criteria
 
-## Acceptance Criteria
+- `python .cursor/mcp/server.py` starts without errors
+- `tools/list` returns 12 tools (including 4 new)
+- `rag.ingest` works on `knowledge/`
+- ruff/mypy/pytest pass
+- MCP in Cursor shows green status
 
-- ✅ `python mcp/server.py` starts without errors
-- ✅ `python -m pytest tests/` discovers and runs tests
-- ✅ `scripts/bootstrap.ps1` creates virtual environment
-- ✅ All quality gates pass: ruff, mypy, pytest
-- ✅ README provides clear setup instructions
-- ✅ Project structure matches documented layout
-
-## Commands to Run
+## Commands
 
 ```bash
-# Quality gates (run after each major change)
+# Bootstrap (Windows PowerShell)
+./.cursor/scripts/bootstrap.ps1
+
+# Initialize + tools/list
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"cursor","version":"1.0"}}}' | python .cursor/mcp/server.py
+
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | python .cursor/mcp/server.py
+
+# Ingest knowledge
+echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"rag.ingest","arguments":{"paths":["knowledge/"]}}}' | python .cursor/mcp/server.py
+
+# Quality gates
 ruff check .
 mypy . --strict
-python -m pytest tests/ -v
-
-# Bootstrap verification
-python mcp/server.py  # Should start MCP server
-python -c "import chromadb, mcp.server"  # Verify imports work
-
-# Environment setup
-./scripts/bootstrap.ps1  # Windows PowerShell
+pytest -v
 ```
 
-## Notes
+## Tips
 
-- Follow Plan→Code→Test→Review workflow gates
-- Keep changes minimal and atomic
-- Test incrementally after each step
-- Stop immediately if quality gates fail
-- Document all setup steps clearly in README
+- Always begin with `auto_context_search` before starting a task
+- Track preferences (`track_user_preferences`) to personalize style
+- Add patterns to the KB (`add_knowledge`) after significant decisions
