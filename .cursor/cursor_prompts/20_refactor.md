@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Enterprise Code Refactoring (Safe Editing Protocol)
 
 Perform production-grade code refactoring with zero functional changes, comprehensive testing, and enterprise-grade quality assurance using Composer mode and safe editing practices.
@@ -13,9 +14,33 @@ Perform production-grade code refactoring with zero functional changes, comprehe
 **Risk Assessment:** [Critical/Medium/Low - based on code complexity and usage patterns]
 
 ## Safe Editing Protocol (Zero-Tolerance for Regressions)
+=======
+# Code Refactoring (OLCIA)
+
+Refactor to improve clarity and maintainability, preserving behavior, with automatic RAG context and quality control.
+
+## Plan (6 steps)
+
+1) 🔍 Context: `auto_context_search(task_type="refactor")` + `analyze_project_context("patterns")`
+2) 🗺️ Scope: minimal diff, no public API changes
+3) 🛠️ Incremental changes, clear names, early returns, avoid unnecessary try/except
+4) 🧪 Tests: establish baseline, then iterate on target tests
+5) 💡 `suggest_improvements` – ensure security/maintainability/performance
+6) 📝 `memory.log` + `add_knowledge` – capture patterns and lessons
+
+## Acceptance criteria
+
+- No behavior change; tests pass
+- Readability/maintainability improved
+- Lint/type/tests green
+- Patterns documented in KB
+
+## Commands
+>>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a
 
 ### Pre-Refactoring Baseline Establishment
 ```bash
+<<<<<<< HEAD
 # Establish immutable baseline
 git checkout -b refactor/[target]
 poetry run python -m pytest tests/ --cov=. --cov-report=html -v > baseline_test_results.txt
@@ -192,3 +217,23 @@ else:
 - **Pattern Library**: Add successful patterns to project knowledge base
 - **Lessons Learned**: Update team memory with refactoring insights
 - **Future Guidelines**: Establish patterns for similar future refactoring tasks
+=======
+# Baseline
+pytest -v --tb=short
+ruff check .
+mypy . --strict
+
+# RAG context
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auto_context_search","arguments":{"task_description":"[refactor area]","task_type":"refactor"}}}' | python .cursor/mcp/server.py
+
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"analyze_project_context","arguments":{"analysis_type":"patterns"}}}' | python .cursor/mcp/server.py
+
+# Review after changes
+echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"suggest_improvements","arguments":{"code":"<CHANGED_CODE>","focus_areas":["maintainability","security","performance"]}}}' | python .cursor/mcp/server.py
+```
+
+## Tips
+
+- Do not expand scope — aim for minimal diff
+- Apply user preferences (`track_user_preferences`) for coding style
+>>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a

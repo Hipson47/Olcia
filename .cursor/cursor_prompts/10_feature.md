@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Enterprise Feature Development (TDD + Safe Editing Protocol)
 
 Implement production-grade features using Test-Driven Development with comprehensive validation, security auditing, and enterprise-grade quality assurance.
@@ -11,12 +12,53 @@ Implement production-grade features using Test-Driven Development with comprehen
 **Security/Compliance Requirements:** [GDPR, SOC 2, or other compliance needs]
 
 ## Context Scoping & Planning
+=======
+# Feature Implementation (OLCIA)
+
+Add a new feature leveraging MCP+RAG and the assistant’s automatic tools.
+
+## Plan (8 steps)
+
+1) 🔍 `auto_context_search` – gather context (similar implementations, best practices, lessons)
+2) 🧠 `track_user_preferences(retrieve, ...)` – align with user style
+3) 🏗️ Implement – minimal diff, types, validation
+4) 💡 `suggest_improvements` – code review (security/perf/maint/testing)
+5) 🧪 Tests – unit + integration
+6) 📚 Docs – README + KB (`add_knowledge` for patterns)
+7) 🔁 E2E with MCP – `tools/list`, `tools/call`
+8) ✅ Quality gates – ruff, mypy, pytest
+
+## Acceptance criteria
+
+- Requirements implemented with no regressions
+- Quality gates pass
+- MCP tools used (at least `auto_context_search` + `suggest_improvements`)
+- Patterns added to KB; preferences updated; `memory.log` filled
+
+## Commands
+>>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a
 
 ### Knowledge Mining (RAG-Enhanced)
 ```bash
+<<<<<<< HEAD
 @cursor-agent search_knowledge "similar feature implementations"
 @cursor-agent search_knowledge "security patterns for [domain]"
 @cursor-agent search_memory "previous implementation challenges"
+=======
+# Context for the feature
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auto_context_search","arguments":{"task_description":"[desc]","task_type":"implement"}}}' | python .cursor/mcp/server.py
+
+# Code review
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"suggest_improvements","arguments":{"code":"<CODE>","focus_areas":["security","maintainability","testing"]}}}' | python .cursor/mcp/server.py
+
+# Preferences
+echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"track_user_preferences","arguments":{"action":"store","preference_key":"coding_style","preference_value":"clean_code"}}}' | python .cursor/mcp/server.py
+
+# Tests
+pytest -v
+ruff check .
+mypy . --strict
+>>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a
 ```
 
 ### Context Limitation (Token Optimization)
@@ -26,6 +68,7 @@ Implement production-grade features using Test-Driven Development with comprehen
 @cursor-agent route "feature complexity assessment"
 ```
 
+<<<<<<< HEAD
 ### Risk Assessment & Planning
 - **Complexity Level**: [Simple/Moderate/Complex/Enterprise]
 - **Security Impact**: [None/Low/Medium/High/Critical]
@@ -180,3 +223,8 @@ else:
 - **Documentation Automation**: Generate docs from code and tests
 - **Compliance by Design**: Security and compliance built into architecture
 - **Scalability Proofing**: Design for 10x growth from initial requirements
+=======
+- Always start with RAG + memory context
+- Treat `suggest_improvements` as automated code review
+- Document important decisions in KB (`add_knowledge`) and `memory.log`
+>>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a

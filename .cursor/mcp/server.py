@@ -16,6 +16,8 @@ from typing import Any, Optional
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Also add the .cursor directory to ensure imports work from different CWD
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     import chromadb
@@ -30,9 +32,14 @@ except ImportError as e:
     print(f"Missing dependency: {e}", file=sys.stderr)
     sys.exit(1)
 
+<<<<<<< HEAD
 # Load environment variables from root directory
 ROOT_DIR = Path(__file__).parent.parent.parent
 load_dotenv(ROOT_DIR / ".env")
+=======
+# Load environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
+>>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a
 
 
 class SimpleRateLimiter:
@@ -357,6 +364,82 @@ class MCPServer:
                     },
                     "required": ["event", "detail"]
                 }
+            },
+            "auto_context_search": {
+                "name": "auto_context_search",
+                "description": "Automatically search for relevant context before implementing a task. Returns best practices, similar implementations, and lessons learned.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "task_description": {
+                            "type": "string",
+                            "description": "Description of the task to implement"
+                        },
+                        "task_type": {
+                            "type": "string",
+                            "description": "Type of task: 'implement', 'debug', 'refactor', or 'test'",
+                            "enum": ["implement", "debug", "refactor", "test"]
+                        }
+                    },
+                    "required": ["task_description", "task_type"]
+                }
+            },
+            "suggest_improvements": {
+                "name": "suggest_improvements",
+                "description": "Analyze code and suggest improvements based on knowledge base and best practices",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "code": {
+                            "type": "string",
+                            "description": "The code to analyze"
+                        },
+                        "focus_areas": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Areas to focus on: 'performance', 'security', 'maintainability', 'testing'"
+                        }
+                    },
+                    "required": ["code"]
+                }
+            },
+            "track_user_preferences": {
+                "name": "track_user_preferences",
+                "description": "Store and retrieve user coding preferences and style",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "description": "Action to perform: 'store' or 'retrieve'",
+                            "enum": ["store", "retrieve"]
+                        },
+                        "preference_key": {
+                            "type": "string",
+                            "description": "Preference key (e.g., 'coding_style', 'test_framework', 'language_preference')"
+                        },
+                        "preference_value": {
+                            "type": "string",
+                            "description": "Preference value (only for 'store' action)"
+                        }
+                    },
+                    "required": ["action", "preference_key"]
+                }
+            },
+            "analyze_project_context": {
+                "name": "analyze_project_context",
+                "description": "Analyze current project structure and provide contextual insights",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "analysis_type": {
+                            "type": "string",
+                            "description": "Type of analysis: 'architecture', 'dependencies', 'patterns', 'tech_stack'",
+                            "enum": ["architecture", "dependencies", "patterns", "tech_stack"]
+                        }
+                    },
+                    "required": ["analysis_type"]
+                }
             }
         }
 
@@ -487,6 +570,30 @@ class MCPServer:
             result = log_memory(event, detail, hint)
             return result
 
+        elif tool_name == "auto_context_search":
+            task_description = args["task_description"]
+            task_type = args["task_type"]
+            result = await self.auto_context_search(task_description, task_type)
+            return result
+
+        elif tool_name == "suggest_improvements":
+            code = args["code"]
+            focus_areas = args.get("focus_areas", ["performance", "security", "maintainability"])
+            result = await self.suggest_improvements(code, focus_areas)
+            return result
+
+        elif tool_name == "track_user_preferences":
+            action = args["action"]
+            preference_key = args["preference_key"]
+            preference_value = args.get("preference_value")
+            result = self.track_user_preferences(action, preference_key, preference_value)
+            return result
+
+        elif tool_name == "analyze_project_context":
+            analysis_type = args["analysis_type"]
+            result = await self.analyze_project_context(analysis_type)
+            return result
+
         else:
             raise ValueError(f"Unknown tool: {tool_name}")
 
@@ -531,10 +638,196 @@ class MCPServer:
                 "error": str(e)
             }
 
+<<<<<<< HEAD
 def stdin_reader(queue):
     """Thread function to read from stdin."""
     for line in sys.stdin:
         queue.put(line.strip())
+=======
+    async def auto_context_search(self, task_description: str, task_type: str) -> dict[str, Any]:
+        """
+        Automatically search for relevant context before implementing a task.
+        Returns best practices, similar implementations, and lessons learned.
+        """
+        try:
+            # Search knowledge base for similar implementations
+            implementations = self.rag_server.search_knowledge(
+                f"{task_type} {task_description}",
+                n_results=5
+            )
+
+            # Search memory for related patterns and lessons
+            memory_results = self.rag_server.search_memory(
+                task_description,
+                n_results=3
+            )
+
+            # Search for best practices
+            best_practices = self.rag_server.search_knowledge(
+                f"best practices {task_type}",
+                n_results=3
+            )
+
+            return {
+                "similar_implementations": implementations,
+                "lessons_learned": memory_results,
+                "best_practices": best_practices,
+                "recommendations": self._generate_recommendations(task_type)
+            }
+
+        except Exception as e:
+            return {
+                "error": str(e),
+                "similar_implementations": [],
+                "lessons_learned": [],
+                "best_practices": []
+            }
+
+    async def suggest_improvements(self, code: str, focus_areas: list[str]) -> dict[str, Any]:
+        """
+        Analyze code and suggest improvements based on knowledge base and best practices.
+        """
+        try:
+            suggestions = []
+
+            for area in focus_areas:
+                # Search knowledge base for patterns related to improvement area
+                results = self.rag_server.search_knowledge(
+                    f"{area} improvements best practices",
+                    n_results=3
+                )
+
+                if results:
+                    suggestions.append({
+                        "area": area,
+                        "recommendations": [r["content"][:200] for r in results],
+                        "relevance_scores": [r["relevance_score"] for r in results]
+                    })
+
+            return {
+                "suggestions": suggestions,
+                "analyzed_areas": focus_areas,
+                "code_length": len(code)
+            }
+
+        except Exception as e:
+            return {
+                "error": str(e),
+                "suggestions": []
+            }
+
+    def track_user_preferences(self, action: str, preference_key: str, preference_value: str | None = None) -> dict[str, Any]:
+        """
+        Store and retrieve user coding preferences and style.
+        """
+        try:
+            if action == "store":
+                if not preference_value:
+                    return {"ok": False, "error": "preference_value required for store action"}
+
+                # Store preference in memory collection
+                self.rag_server.add_memory(
+                    f"User preference: {preference_key} = {preference_value}",
+                    context="user_preferences"
+                )
+
+                return {
+                    "ok": True,
+                    "action": "stored",
+                    "preference_key": preference_key,
+                    "preference_value": preference_value
+                }
+
+            elif action == "retrieve":
+                # Search memory for the preference
+                results = self.rag_server.search_memory(
+                    f"User preference: {preference_key}",
+                    n_results=1
+                )
+
+                if results:
+                    return {
+                        "ok": True,
+                        "action": "retrieved",
+                        "preference_key": preference_key,
+                        "preference_value": results[0]["content"],
+                        "relevance": results[0]["relevance_score"]
+                    }
+                else:
+                    return {
+                        "ok": False,
+                        "action": "retrieved",
+                        "error": "Preference not found"
+                    }
+
+        except Exception as e:
+            return {
+                "ok": False,
+                "error": str(e)
+            }
+
+    async def analyze_project_context(self, analysis_type: str) -> dict[str, Any]:
+        """
+        Analyze current project structure and provide contextual insights.
+        """
+        try:
+            # Search knowledge base for project-related patterns
+            results = self.rag_server.search_knowledge(
+                f"project {analysis_type} patterns",
+                n_results=5
+            )
+
+            insights = []
+            for result in results:
+                insights.append({
+                    "insight": result["content"][:300],
+                    "relevance": result["relevance_score"],
+                    "metadata": result.get("metadata", {})
+                })
+
+            return {
+                "analysis_type": analysis_type,
+                "insights": insights,
+                "total_findings": len(insights)
+            }
+
+        except Exception as e:
+            return {
+                "error": str(e),
+                "insights": []
+            }
+
+    def _generate_recommendations(self, task_type: str) -> list[str]:
+        """Generate task-specific recommendations."""
+        recommendations = {
+            "implement": [
+                "Start with RAG search for similar implementations",
+                "Write tests before/during implementation",
+                "Add proper type hints and error handling",
+                "Document complex logic with comments"
+            ],
+            "debug": [
+                "Search for similar bugs in memory",
+                "Check recent changes that might cause the issue",
+                "Add regression tests after fixing",
+                "Log the error and solution for future reference"
+            ],
+            "refactor": [
+                "Ensure all tests pass before starting",
+                "Make small, incremental changes",
+                "Preserve existing behavior",
+                "Update documentation and tests"
+            ],
+            "test": [
+                "Cover happy path and edge cases",
+                "Test error handling scenarios",
+                "Aim for >80% code coverage",
+                "Use descriptive test names"
+            ]
+        }
+
+        return recommendations.get(task_type, ["Follow best practices from knowledge base"])
+>>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a
 
 async def main() -> None:
     """Main MCP server loop."""
