@@ -1,86 +1,194 @@
-# Code Refactoring
+# Enterprise Code Refactoring (Safe Editing Protocol)
 
-Improve code quality, maintainability, and performance while preserving all existing functionality.
+Perform production-grade code refactoring with zero functional changes, comprehensive testing, and enterprise-grade quality assurance using Composer mode and safe editing practices.
 
-## Scope
+## Refactoring Specification (Zero-Functional-Change Contract)
 
-**Refactoring Target:** [Specific code/module/function to refactor]
+**Refactoring Target:** [Precise code scope - function/class/module boundaries]
 
-**Refactoring Type:** [e.g., performance, readability, maintainability, architecture]
+**Refactoring Objectives:** [Performance/Readability/Maintainability/Architecture goals with measurable metrics]
 
-**Files to modify:**
-- `@[target_file]` - Primary file being refactored
-- `@tests/test_[target].py` - Update tests if needed
-- `@mcp/server.py` - Update imports/interfaces if changing APIs
+**Business Impact:** [Quantifiable benefits: performance improvement %, maintainability score increase]
 
-**Files to reference:**
-- `@.cursor/rules/agent.mdc` - Minimal-diff policy and quality gates
-- `@tests/` - Ensure no test regressions
-- `@requirements.txt` - Check for new dependencies
+**Risk Assessment:** [Critical/Medium/Low - based on code complexity and usage patterns]
 
-## Implementation Plan (6 steps)
+## Safe Editing Protocol (Zero-Tolerance for Regressions)
 
-1. **Analyze current code** - Understand existing behavior and identify improvement opportunities
-2. **Plan refactoring approach** - Design changes that preserve functionality
-3. **Implement changes incrementally** - Small, testable changes with frequent verification
-4. **Update tests if needed** - Modify test structure without changing test intent
-5. **Verify functionality preservation** - Ensure all existing behavior still works
-6. **Clean up and document** - Remove technical debt and update documentation
-
-## Acceptance Criteria
-
-- ✅ **Behavior Preservation**: All existing functionality works exactly as before
-- ✅ **No Regressions**: All existing tests still pass
-- ✅ **Quality Gates**: ruff, mypy, pytest all pass
-- ✅ **Performance**: No significant performance degradation (if applicable)
-- ✅ **Readability**: Code is more maintainable and understandable
-- ✅ **Documentation**: Updated comments and docstrings where improved
-- ✅ **Minimal Diff**: Changes are focused and don't touch unrelated code
-
-## Commands to Run
-
+### Pre-Refactoring Baseline Establishment
 ```bash
-# Before refactoring - establish baseline
-python -m pytest tests/ -v --tb=short
-ruff check .
-mypy . --strict
-
-# During refactoring - run frequently
-python -m pytest tests/test_[target].py -v  # Specific tests
-python -c "import [target_module]; print('Import works')"
-
-# After refactoring - full verification
-python -m pytest tests/ -v  # All tests
-ruff check .
-mypy . --strict
-
-# Integration testing
-python mcp/server.py  # Ensure MCP server still starts
-echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | python mcp/server.py
+# Establish immutable baseline
+git checkout -b refactor/[target]
+poetry run python -m pytest tests/ --cov=. --cov-report=html -v > baseline_test_results.txt
+poetry run python -c "import memory_profiler; memory_profiler.profile_function([target_function])" > baseline_performance.txt
 ```
 
-## Refactoring Guidelines
+### Context Scoping & Planning
+```bash
+# RAG-enhanced planning
+@cursor-agent search_knowledge "refactoring patterns for [pattern_type]"
+@cursor-agent search_memory "similar refactoring challenges"
+@file:target_module.py @folder:tests @symbol:public_interfaces
 
-**DO:**
-- Change internal implementation while preserving external interfaces
-- Improve variable/function names for clarity
-- Break down large functions into smaller, focused ones
-- Remove duplicate code and consolidate logic
-- Add type hints and improve error handling
-- Update documentation and comments
+# Impact analysis
+@cursor-agent route "refactoring complexity assessment"
+```
 
-**DO NOT:**
-- Change public APIs without explicit approval
-- Modify functionality or behavior
-- Remove existing features
-- Change test expectations (only test structure)
-- Introduce new dependencies without approval
-- Make broad changes across many files
+### Dependency Analysis (Composer Mode Preparation)
+- **Import Dependencies**: Map all modules importing target code
+- **Interface Contracts**: Document all public APIs and contracts
+- **Test Coverage**: Identify tests covering refactored functionality
+- **Integration Points**: Map external system interactions
 
-## Notes
+## Implementation Protocol (Composer Mode + Safe Editing)
 
-- **Stop immediately** if tests start failing - indicates behavior change
-- Use `git diff` to ensure minimal, focused changes
-- Document refactoring rationale in commit messages
-- Consider performance implications for critical paths
-- Update `memory/reflexion.md` with lessons learned from the refactoring
+### Phase 1: Analysis & Design (Planning Phase)
+1. **Code Metrics Baseline**: Cyclomatic complexity, maintainability index, duplication metrics
+2. **Dependency Graph**: Complete call graph and data flow analysis
+3. **Test Coverage Analysis**: Identify gaps and high-risk areas
+4. **Performance Profiling**: Establish current performance baselines
+
+### Phase 2: Incremental Refactoring (Execution Phase)
+1. **Composer Mode Execution**: Use for multi-file dependency-aware changes
+2. **Minimal Diff Principle**: Changes < 5 lines per file, incremental commits
+3. **Continuous Validation**: Test after each atomic change
+4. **Safe Rollback Points**: Git commits after each validated step
+
+### Phase 3: Validation & Optimization (Quality Assurance)
+1. **Behavioral Verification**: 100% test pass rate, no functional regressions
+2. **Performance Validation**: Meet or exceed baseline performance metrics
+3. **Code Quality Gates**: All linting, type checking, and complexity checks
+4. **Integration Testing**: Full system validation including external dependencies
+
+## Enterprise Quality Gates (Zero Functional Change)
+
+### Code Quality Assurance
+- ✅ **Behavioral Preservation**: `pytest tests/ --strict-markers` - Zero test failures
+- ✅ **Type Safety**: `mypy . --strict` - All type checks passing
+- ✅ **Code Standards**: `ruff check . --fix` - Enterprise formatting
+- ✅ **Security Scan**: `safety check` - No new vulnerabilities introduced
+
+### Performance & Scalability
+- ✅ **Performance Baseline**: Meet or improve established SLAs
+- ✅ **Memory Usage**: No memory leaks or significant increases
+- ✅ **Resource Efficiency**: CPU and I/O usage within acceptable ranges
+- ✅ **Scalability Impact**: No degradation under load
+
+### Operational Excellence
+- ✅ **Monitoring**: All metrics and logging preserved/enhanced
+- ✅ **Documentation**: Updated inline docs and architectural documentation
+- ✅ **Deployment**: Zero-downtime deployment capability maintained
+- ✅ **Rollback**: Automated rollback procedures tested and working
+
+## Advanced Refactoring Commands
+
+```bash
+# Phase 1: Baseline & Analysis
+poetry run python -m pytest tests/ --cov=refactored_module --cov-report=term-missing
+poetry run mypy refactored_module.py --strict
+poetry run radon cc refactored_module.py  # Complexity analysis
+
+# Phase 2: Incremental Refactoring
+poetry run python -m pytest tests/test_refactored.py -v  # After each change
+poetry run ruff check refactored_module.py  # Style validation
+git add -p  # Selective staging for minimal diffs
+
+# Phase 3: Comprehensive Validation
+poetry run python -m pytest tests/ --cov=. --cov-fail-under=95
+poetry run mypy . --strict
+poetry run safety check
+docker build -t refactor-validation .
+docker run --rm refactor-validation python -m pytest tests/e2e/ -v
+
+# Performance Validation
+poetry run python -c "import cProfile; cProfile.run('target_function()')" > performance_profile.txt
+```
+
+## Refactoring Patterns & Techniques
+
+### Performance Optimization Patterns
+```python
+# Before: Inefficient list comprehension
+result = [expensive_operation(x) for x in large_list if condition(x)]
+
+# After: Optimized with early exit and batching
+def optimized_process(items):
+    results = []
+    for batch in batch_items(items, batch_size=100):
+        filtered_batch = [x for x in batch if condition(x)]
+        if not filtered_batch:
+            continue
+        batch_results = [expensive_operation(x) for x in filtered_batch]
+        results.extend(batch_results)
+    return results
+```
+
+### Maintainability Improvements
+```python
+# Before: Large function with multiple responsibilities
+def process_data(data, config, logger):
+    # Validation logic
+    # Processing logic
+    # Storage logic
+    # Error handling
+
+# After: Single Responsibility Principle
+class DataProcessor:
+    def __init__(self, config: ProcessingConfig, logger: Logger):
+        self.config = config
+        self.logger = logger
+        self.validator = DataValidator(config)
+        self.storage = DataStorage(config)
+
+    def process(self, data: DataFrame) -> ProcessingResult:
+        validated_data = self.validator.validate(data)
+        processed_data = self._apply_business_logic(validated_data)
+        return self.storage.store(processed_data)
+```
+
+## Success Metrics & Validation
+
+### Quantitative Metrics
+- **Cyclomatic Complexity**: Reduction by X% (target: < 10 per function)
+- **Maintainability Index**: Improvement by Y points (target: > 75)
+- **Test Coverage**: Maintained > 95% with improved assertion quality
+- **Performance**: P95 latency improvement or maintained within 5% variance
+
+### Qualitative Improvements
+- **Code Readability**: Improved variable naming and structure
+- **Documentation**: Comprehensive docstrings and architectural docs
+- **Error Handling**: Robust error handling with proper logging
+- **Type Safety**: Complete type annotations with generic support
+
+## Enterprise Refactoring Notes
+
+- **Zero Downtime**: All refactoring supports live system operation
+- **Gradual Rollout**: Feature flags for complex refactoring deployment
+- **Monitoring Integration**: Enhanced metrics and alerting post-refactoring
+- **Knowledge Capture**: Document patterns and lessons for future refactoring
+- **Team Alignment**: Peer review and architectural review for complex changes
+- **Compliance Preservation**: Maintain all security and regulatory compliance
+
+## Rollback Strategy
+
+### Automated Rollback
+```bash
+# Immediate rollback on validation failure
+git reset --hard HEAD~1
+poetry run python -m pytest tests/  # Verify rollback success
+```
+
+### Gradual Rollback (Feature Flags)
+```python
+# Feature flag controlled refactoring
+if feature_flags.is_enabled('refactored_implementation'):
+    return refactored_function()
+else:
+    return original_function()
+```
+
+## Documentation & Knowledge Capture
+
+- **Refactoring Rationale**: Detailed documentation of why and how changes were made
+- **Pattern Library**: Add successful patterns to project knowledge base
+- **Lessons Learned**: Update team memory with refactoring insights
+- **Future Guidelines**: Establish patterns for similar future refactoring tasks

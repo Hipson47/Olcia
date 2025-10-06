@@ -1,8 +1,12 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -16,35 +20,122 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual environments
-venv/
-env/
-ENV/
-.venv/
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the executable, and should not be committed.
+*.manifest
+*.spec
 
-# Environment and secrets
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
 .env
-.env.local
-.env.*.local
-.secrets
-*.key
-*.pem
-credentials.json
-**/credentials.json
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# IDE and editor files
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-
-# OS generated files
+# OS
 .DS_Store
 .DS_Store?
 ._*
@@ -53,55 +144,26 @@ credentials.json
 ehthumbs.db
 Thumbs.db
 
-# Logs and temporary files
+# Logs
+logs/
 *.log
-*.tmp
-*.temp
-.cache/
-.tmp/
 
-# Large binary files and archives
-*.zip
-*.tar.gz
-*.rar
-*.7z
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Database and storage files
-chroma.sqlite3
+# Database
 *.db
 *.sqlite
 *.sqlite3
 
-# Node modules (if any)
-node_modules/
+# Temporary files
+tmp/
+temp/
 
-# Test coverage
-.coverage
-htmlcov/
-.pytest_cache/
-.tox/
+# Docker
+.dockerignore
 
-# Knowledge base - keep only test files
-knowledge/
-!knowledge/sample_documentation.md
-!knowledge/sample_config.json
+# Local development
+.env.local
+.env.development
+.env.production
 
-# RAG store - local database files
-rag/store/
-rag/**/*.bin
-rag/**/*.pickle
-
-# Memory files - should not be committed
-memory/mistakes.jsonl
-memory/reflexion.md
-
-# Scripts and bootstrap artifacts
-scripts/bootstrap_artifacts/
-
-# Windows PowerShell
-*.ps1~
-
+# Cursor MCP
+.cursor/test_mcp.py

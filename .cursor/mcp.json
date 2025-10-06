@@ -1,11 +1,9 @@
 {
   "mcpServers": {
-    "olcia-ai-agent": {
+    "cursor-agent": {
       "command": "python",
-      "args": ["mcp/server.py"],
-      "env": {
-        "PYTHONPATH": "."
-      }
+      "args": [".cursor/mcp/server.py"]
     }
   }
 }
+

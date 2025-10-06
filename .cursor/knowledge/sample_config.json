@@ -1,0 +1,74 @@
+{
+  "system": {
+    "name": "MCP+RAG Scaffolding",
+    "version": "1.0.0",
+    "description": "Windows-first Model Context Protocol server with ChromaDB integration"
+  },
+  "components": {
+    "mcp_server": {
+      "protocol": "stdio",
+      "tools": [
+        "add_knowledge",
+        "search_knowledge",
+        "add_memory",
+        "search_memory"
+      ],
+      "host": "localhost",
+      "port": 8000
+    },
+    "rag_system": {
+      "embedding_model": "all-MiniLM-L6-v2",
+      "vector_store": "ChromaDB",
+      "chunk_strategy": "token_based",
+      "supported_formats": ["md", "pdf", "json"]
+    },
+    "file_watcher": {
+      "platform": "windows",
+      "debounce_seconds": 2,
+      "watch_patterns": ["*.md", "*.pdf", "*.json"]
+    }
+  },
+  "configuration": {
+    "chunking": {
+      "size_tokens": 350,
+      "overlap_percent": 0.2,
+      "encoding": "cl100k_base"
+    },
+    "embedding": {
+      "model": "all-MiniLM-L6-v2",
+      "device": "cpu",
+      "batch_size": 32
+    },
+    "storage": {
+      "type": "local_chroma",
+      "persist_directory": "rag/store",
+      "collection_name": "knowledge_base"
+    }
+  },
+  "workflows": {
+    "development": [
+      "plan_changes",
+      "implement_code",
+      "run_tests",
+      "review_changes"
+    ],
+    "deployment": [
+      "bootstrap_environment",
+      "validate_setup",
+      "start_services",
+      "monitor_operations"
+    ]
+  },
+  "requirements": {
+    "python": ">=3.8.0",
+    "dependencies": [
+      "chromadb",
+      "sentence-transformers",
+      "PyMuPDF",
+      "PyYAML",
+      "tiktoken",
+      "watchdog"
+    ],
+    "platform": "windows"
+  }
+}

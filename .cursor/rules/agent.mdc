@@ -1,171 +1,232 @@
-# Cursor Agent with Full RAG + MCP Integration
+---
+alwaysApply: true
+---
+## Code Phase (TDD-Driven Implementation)
 
-## Agent Meta-Prompt
-**You are an intelligent Cursor agent that leverages the full potential of RAG (Retrieval-Augmented Generation) systems and Model Context Protocol (MCP) to deliver exceptional code quality and solutions.**
+### Test-Driven Development as Specification
+1. **Red Phase**: Write failing tests first using precise behavioral specifications
+2. **Green Phase**: Implement minimal code to pass tests with iterative validation
+3. **Refactor Phase**: Improve code structure while maintaining test coverage
 
-**Your key capabilities:**
-- **RAG-First Approach**: Always search the knowledge base before generating code
-- **MCP Integration**: Utilize MCP tools for external resource access
-- **Multi-Agent Orchestration**: Route tasks to specialized agents
-- **Plan-Execute-Reflect**: Structural approach with retrospection
+### RAG-Enhanced Implementation Protocol:
+```
+1. TDD Specification: Write test cases defining exact behavior
+2. Knowledge Search: @cursor-agent search_knowledge "implementation patterns for X"
+3. Minimal Implementation: Write smallest code to pass tests
+4. Pattern Validation: Verify against project standards and best practices
+5. Incremental Testing: Run tests after each change, not batch operations
+```
+
+### Safe Edit Protocol (Minimal Diff Principle)
+- **Inline Edit**: Use for single-line changes and small fixes (< 5 lines)
+- **Composer Mode**: Use for multi-file refactoring with dependency analysis
+- **Background Agent**: Deploy for long-running operations (> 30 seconds)
+- **Diff Review**: Always review color-coded diffs before acceptance
+
+### Advanced Tool Integration
+- **MCP Ecosystem**: Leverage `@cursor-agent` tools for knowledge and memory management
+- **Codebase Search**: Use semantic search for pattern discovery and reuse
+- **Background Processing**: Route heavy operations to background agents
+- **Memory Learning**: Log successful patterns and error recovery strategies
 
 ---
 
-## Plan Phase (RAG-Enhanced Planning)
+## Test Phase (TDD Validation & Quality Assurance)
 
-### Requirements and Context
-1. **Knowledge Scanning**: Use `@olcia-ai-agent search` to find similar solutions in the knowledge base
-2. **Requirements Analysis**: Conduct detailed requirements analysis with the user
-3. **Task Routing**: Use `@olcia-ai-agent route` for automatic task assignment to specialists
-4. **Structural Plan**: Create hierarchical plan with dependencies and checkpoints
+### TDD-as-Specification Validation Protocol
+1. **Test-First Implementation**: All code must pass pre-written test specifications
+2. **Incremental Validation**: Test after each atomic change, never batch operations
+3. **Coverage-Driven Development**: Maintain >95% test coverage on critical paths
+4. **Integration Testing**: Validate component interactions and data flow
+5. **Performance Benchmarking**: Establish and monitor performance baselines
 
-### RAG Planning Example:
+### Automated Quality Gates (Zero Tolerance)
+- ✅ **Code Quality**: `ruff check . --fix` (auto-fix formatting and linting)
+- ✅ **Type Safety**: `mypy . --strict` (100% type coverage required)
+- ✅ **Unit Test Suite**: `pytest tests/unit/ -v --cov=. --cov-fail-under=95`
+- ✅ **Integration Tests**: `pytest tests/e2e/ -v` (full system validation)
+- ✅ **Security Audit**: Automated CWE vulnerability scanning
+- ✅ **Performance Tests**: Load testing and memory profiling
+
+### Test-Driven Development Metrics:
+- **Time-to-Green**: Measure from red test to passing implementation
+- **Test Stability**: Ensure tests pass consistently across environments
+- **Coverage Quality**: Branch coverage >90%, mutation testing for critical paths
+- **Flakiness Detection**: Automated detection of unstable test cases
+
+---
+
+## Review Phase (Continuous Learning & Reflection)
+
+### RAG-Enhanced Retrospective Analysis
+1. **Pattern Validation**: Cross-reference implementation against knowledge base best practices
+2. **Architectural Review**: Assess design decisions and scalability implications
+3. **Security Assessment**: Automated vulnerability scanning and threat modeling
+4. **Performance Analysis**: Benchmark against established performance baselines
+5. **Code Quality Metrics**: Evaluate maintainability and technical debt indicators
+
+### Continuous Learning Protocol:
 ```
-1. Search knowledge: @olcia-ai-agent search "similar API implementations"
-2. Analyze business requirements
-3. Identify architectural patterns
-4. Create detailed implementation plan
+1. Success Documentation: @cursor-agent add_memory "successful pattern: X implementation"
+2. Knowledge Expansion: @cursor-agent add_knowledge "new pattern discovered during Y"
+3. Error Pattern Learning: @cursor-agent log "error pattern: Z with mitigation W"
+4. Performance Baseline: Update performance metrics and alerting thresholds
+5. Retrospective Synthesis: Generate lessons learned for future implementations
+```
+
+### Memory & Adaptation Systems
+- **Success Pattern Mining**: Automatically identify and catalog successful implementation patterns
+- **Error Recovery Database**: Build comprehensive error pattern recognition and solutions
+- **Performance Intelligence**: Learn optimal patterns for different complexity classes
+- **User Preference Learning**: Adapt coding style and approach to user preferences
+- **Contextual Adaptation**: Modify behavior based on project maturity and team dynamics
+
+---
+
+## Advanced Capabilities (2025 State-of-the-Art)
+
+### Multi-Agent Orchestration Architecture
+```
+Specialized Agent Types:
+├── General Purpose: Core development and implementation tasks
+├── Testing Specialist: TDD expert with comprehensive validation
+├── Architecture Agent: System design and scalability analysis
+├── Security Agent: Threat modeling and vulnerability assessment
+├── Performance Agent: Optimization and benchmarking specialist
+├── Documentation Agent: Technical writing and knowledge management
+└── DevOps Agent: Deployment and infrastructure automation
+```
+
+### MCP Ecosystem Integration (Full Protocol Support)
+- **Semantic Search**: `@cursor-agent search_knowledge "query" k:10` - Vector-based knowledge retrieval
+- **Knowledge Management**: `@cursor-agent add_knowledge` - Pattern learning and storage
+- **Memory Systems**: `@cursor-agent search_memory "context"` - Conversation and error pattern recall
+- **Intelligent Routing**: `@cursor-agent route "complex goal"` - Multi-agent task decomposition
+- **Background Processing**: Long-running operations with progress monitoring
+- **External API Access**: MCP servers for specialized tools and services
+
+### Performance & Scalability Optimization
+- **Batch Processing**: Intelligent grouping of similar operations for efficiency
+- **Predictive Caching**: ML-driven cache optimization based on usage patterns
+- **Async Architecture**: Event-driven processing with backpressure management
+- **Resource Pooling**: Connection pooling and resource optimization
+- **Horizontal Scaling**: Multi-instance deployment with load balancing
+- **Observability**: Comprehensive metrics, tracing, and alerting systems
+
+---
+
+## Enterprise Security & Compliance (2025 Standards)
+
+### Advanced Secrets Management
+- **Environment Isolation**: Complete separation of development/production secrets
+- **Dynamic Key Rotation**: Automated API key lifecycle management
+- **Secrets Encryption**: End-to-end encryption for all sensitive data
+- **VCS Protection**: Multi-layer prevention of secrets commits with AI detection
+- **Access Auditing**: Comprehensive logging of secret access patterns
+
+### Privacy & Data Protection (GDPR/SOC 2/CCPA Compliant)
+- **Zero Data Retention**: Ephemeral processing with immediate cleanup
+- **Anonymized Telemetry**: Privacy-preserving usage analytics
+- **Workspace Trust**: Mandatory trust verification for all operations
+- **Sandbox Execution**: Isolated execution environment with resource limits
+- **Data Minimization**: Collect only essential data for operation
+
+### Advanced Error Handling & Resilience
+- **Graceful Degradation**: Automatic fallback strategies for service failures
+- **Circuit Breaker Pattern**: Intelligent failure detection and recovery
+- **Structured Observability**: Distributed tracing and comprehensive logging
+- **User-Centric Errors**: Context-aware error messages with actionable guidance
+- **Incident Response**: Automated escalation and recovery protocols
+
+---
+
+## Production Workflow Templates (2025 Best Practices)
+
+### Feature Development (Plan-Execute-Reflect)
+```
+Phase 1: Planning & Context
+├── @cursor-agent search_knowledge "similar feature implementations"
+├── @file:requirements.md @folder:affected_components
+├── Create atomic todo list (5-10 min tasks)
+└── @cursor-agent route "complex feature development"
+
+Phase 2: TDD Implementation
+├── Write failing test specifications (Red)
+├── Implement minimal code to pass (Green)
+├── Refactor while maintaining coverage (Refactor)
+└── Incremental testing after each change
+
+Phase 3: Validation & Learning
+├── Automated quality gates (lint, type-check, test)
+├── Performance benchmarking vs baselines
+├── @cursor-agent add_memory "successful pattern"
+└── @cursor-agent add_knowledge "new implementation pattern"
+```
+
+### Critical Bug Fixing (Root Cause Analysis)
+```
+Phase 1: Investigation
+├── @cursor-agent search_knowledge "similar bug patterns"
+├── Reproduce issue with minimal test case
+├── Root cause analysis with instrumentation
+└── Impact assessment and rollback planning
+
+Phase 2: Fix Implementation
+├── Write regression test (TDD Red phase)
+├── Implement minimal fix with safety checks
+├── Verify fix passes all existing tests
+└── Performance validation (no degradation)
+
+Phase 3: Prevention & Learning
+├── Add monitoring/alerting for similar issues
+├── @cursor-agent log "bug pattern: cause -> fix -> prevention"
+├── Update error recovery database
+└── Team knowledge sharing and documentation
+```
+
+### Enterprise Refactoring (Safe Multi-File Changes)
+```
+Phase 1: Analysis & Planning
+├── @cursor-agent search_knowledge "refactoring patterns for X"
+├── Impact analysis across codebase
+├── Create comprehensive test coverage baseline
+└── Branch strategy and rollback checkpoints
+
+Phase 2: Composer Mode Execution
+├── Use Composer for dependency-aware changes
+├── Apply minimal diff principle (< 5 lines per file)
+├── Incremental validation after each file group
+└── Background processing for large operations
+
+Phase 3: Validation & Optimization
+├── Full test suite validation (>95% coverage)
+├── Performance regression testing
+├── Memory and security audits
+└── @cursor-agent add_knowledge "refactoring pattern template"
 ```
 
 ---
 
-## Code Phase (Intelligent Implementation)
+## Continuous Learning & Adaptation (AI-Driven Evolution)
 
-### RAG-Driven Development
-1. **Semantic Search**: Use `@olcia-ai-agent search` before each implementation for best practices
-2. **Pattern Matching**: Find existing patterns in code using `@grep`
-3. **Context-Aware**: Utilize full project context for intelligent suggestions
+### Intelligent Knowledge Base Management
+- **Pattern Mining**: ML-driven identification of successful implementation patterns
+- **Success Quantification**: A/B testing and performance metrics for solution effectiveness
+- **Contextual Learning**: Environment-aware adaptation based on project characteristics
+- **Collaborative Intelligence**: Cross-project pattern sharing and team learning
 
-### Security and Quality
-- **Rate Limiting**: Respect API limits (120 req/min)
-- **Input Validation**: Validate all input data
-- **Error Handling**: Implement structured error handling
-- **Type Safety**: Use MyPy for full type checking
+### Advanced Adaptation Systems
+- **User Behavior Learning**: Deep adaptation to individual developer preferences and work patterns
+- **Project Maturity Assessment**: Automatic adjustment based on codebase complexity and team size
+- **Performance Intelligence**: Predictive optimization based on historical performance data
+- **Error Pattern Recognition**: Automated learning from mistakes and recovery strategies
+- **Feedback Integration**: Real-time incorporation of user feedback into improvement cycles
 
-### Tool Integration
-- **MCP Tools**: Use `@olcia-ai-agent add_knowledge`, `@olcia-ai-agent search_memory`, `@olcia-ai-agent log`
-- **Composer Mode**: For multi-file refactoring
-- **Background Agent**: For long-running operations
-
----
-
-## Test Phase (Comprehensive Validation)
-
-### RAG-Supported Testing
-1. **Test Generation**: Use RAG to find test patterns for similar functionalities
-2. **Coverage Analysis**: Ensure full test coverage of critical paths
-3. **Integration Testing**: Test interactions between components
-4. **Performance Validation**: Check performance under load
-
-### Quality Gates (Mandatory)
-- ✅ **Ruff Linting**: `python -m ruff check . --fix`
-- ✅ **Type Checking**: `python -m mypy mcp/ --strict`
-- ✅ **Unit Tests**: `python -m pytest tests/ -v`
-- ✅ **Integration Tests**: `python -m pytest tests/e2e/ -v`
-- ✅ **Security Scan**: Check CWE vulnerabilities
-
----
-
-## Review Phase (Intelligent Reflection)
-
-### RAG-Enhanced Review
-1. **Knowledge Integration**: Compare implementation with best practices from knowledge base
-2. **Pattern Validation**: Check compliance with established project patterns
-3. **Security Audit**: Conduct automated security audit
-4. **Performance Review**: Evaluate system performance impact
-
-### Memory & Learning
-- **Success Logging**: `@olcia-ai-agent log` for successful solutions
-- **Error Documentation**: Detailed documentation of problems and solutions
-- **Knowledge Update**: Add new patterns to knowledge base `@olcia-ai-agent add_knowledge`
-
----
-
-## Advanced Capabilities
-
-### Multi-Agent Orchestration
-```
-Agent Types:
-- General: General programming tasks
-- Tests: Testing and QA specialist
-- Database: Database operations expert
-```
-
-### External Tool Integration (MCP)
-- **Search**: `@olcia-ai-agent search "query" k:5` - Semantic search
-- **Knowledge**: `@olcia-ai-agent add_knowledge` - Add to knowledge base
-- **Memory**: `@olcia-ai-agent search_memory "context"` - Search conversation context
-- **Orchestrator**: `@olcia-ai-agent route "goal"` - Task routing
-
-### Performance Optimization
-- **Batch Processing**: Group similar operations for efficiency
-- **Caching**: Utilize cache for frequently used data
-- **Async Operations**: Implement asynchronous processing for better responsiveness
-
----
-
-## Safety & Security (SOC 2 Compliant)
-
-### Secrets Management
-- **Environment Variables**: All sensitive data in `.env`
-- **File Permissions**: API keys with 600 permissions
-- **No VCS Secrets**: Automatic blocking of commits with secrets
-
-### Privacy Protection
-- **Zero Retention**: No user data storage
-- **Workspace Trust**: Enforced trust mode
-- **Sandbox Execution**: All commands in secure sandbox
-
-### Error Handling
-- **Graceful Degradation**: System works even with partial failures
-- **Structured Logging**: Detailed logs for debugging
-- **User-Friendly Messages**: Clear error messages
-
----
-
-## Workflow Templates
-
-### Feature Development
-```
-1. @olcia-ai-agent search "similar implementations"
-2. @olcia-ai-agent route "implement feature X"
-3. Create structured plan with checkpoints
-4. Implement using TDD approach
-5. @olcia-ai-agent log success/error events
-6. Update knowledge base with new patterns
-```
-
-### Bug Fixing
-```
-1. @olcia-ai-agent search "similar bug patterns"
-2. Analyze root cause with RAG context
-3. Implement minimal fix
-4. Add regression tests
-5. @olcia-ai-agent log "bug fix: description"
-```
-
-### Refactoring
-```
-1. @olcia-ai-agent search "refactoring patterns for X"
-2. Create backup branch
-3. Use Composer mode for multi-file changes
-4. Validate with comprehensive tests
-5. @olcia-ai-agent add_knowledge "refactoring pattern"
-```
-
----
-
-## Continuous Learning
-
-### Knowledge Base Management
-- **Pattern Recognition**: Automatically identify recurring patterns
-- **Success Metrics**: Track solution effectiveness
-- **Feedback Loop**: Learn from every user interaction
-
-### Adaptation
-- **Context Awareness**: Adapt approach to project specifics
-- **User Preferences**: Learn user preferences and work style
-- **Performance Tuning**: Optimize based on performance metrics
+### Meta-Learning Capabilities
+- **Self-Improvement**: Automated rule refinement based on success/failure analysis
+- **Capability Expansion**: Dynamic addition of new tools and techniques to agent toolkit
+- **Quality Evolution**: Continuous improvement of code quality standards and practices
+- **Scalability Learning**: Adaptation to different project scales and complexity levels
 
 ---
 

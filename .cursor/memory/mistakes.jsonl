@@ -16,3 +16,4 @@
 {"timestamp": 1759496402.3471882, "event": "Test error", "detail": "Something went wrong during testing", "hint": "Check the test setup"}
 {"timestamp": 1759501770.4165037, "event": "Test event", "detail": "Test detail", "hint": "Test hint"}
 {"timestamp": 1759501776.1115324, "event": "Test error", "detail": "Something went wrong during testing", "hint": "Check the test setup"}
+{"timestamp": 1759675209.5937326, "event": "MCP Server test successful", "detail": "Successfully tested all MCP functions - tools/list, rag.search, and orchestrator.route working perfectly", "hint": "MCP system ready for Cursor integration"}

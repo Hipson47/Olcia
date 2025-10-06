@@ -1,82 +1,48 @@
-# Build outputs and artifacts
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Environment and secrets
+# Environment and secrets - protect all sensitive files
 .env
 .env.local
-.env.*.local
-.secrets
+.env.development
+.env.production
+.env.bak
+venv.bak/
+ENV/
+env.bak/
 
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# API Keys and secrets in any location
+*api_key*
+*API_KEY*
+*secret*
+*SECRET*
+*token*
+*TOKEN*
+*password*
+*PASSWORD*
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Logs and temporary files
-*.log
-*.tmp
-*.temp
-.cache/
-.tmp/
-
-# Large binary files
-*.zip
-*.tar.gz
-*.rar
-*.7z
-*.exe
-*.dll
-*.so
-*.dylib
-
-# Database and storage files
-chroma.sqlite3
+# Database files
 *.db
 *.sqlite
 *.sqlite3
+*.sqlite3-journal
 
-# Node modules (if any)
-node_modules/
+# Logs that might contain sensitive data
+logs/
+*.log
 
-# Test coverage
-.coverage
-htmlcov/
+# MCP server configurations with secrets
+.cursor/mcp/server_config.json
+.cursor/mcp/secrets.json
+
+# RAG store (might contain embedded sensitive data)
+rag/store/chroma.sqlite3
+
+# Temporary and cache files
+tmp/
+temp/
+.cache/
 .pytest_cache/
-.tox/
+.mypy_cache/
+__pycache__/
 
-# Poetry virtual environment
-venv/
-.venv/
-
-# RAG vector store
-rag/store/
+# IDE specific
+.vscode/settings.json
+.idea/

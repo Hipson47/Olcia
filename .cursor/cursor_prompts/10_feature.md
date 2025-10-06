@@ -1,70 +1,182 @@
-# Feature Implementation
+# Enterprise Feature Development (TDD + Safe Editing Protocol)
 
-Add a new feature to the MCP+RAG system with complete implementation, testing, and documentation.
+Implement production-grade features using Test-Driven Development with comprehensive validation, security auditing, and enterprise-grade quality assurance.
 
-## Scope
+## Feature Specification (TDD-First Approach)
 
-**Feature Description:** [Brief description of the feature to implement]
+**Feature Description:** [Precise behavioral specification with acceptance criteria]
 
-**Files to modify/create:**
-- `mcp/server.py` - Add new MCP tools or extend existing ones
-- `mcp/[feature_module].py` - New feature implementation
-- `tests/test_[feature].py` - Feature tests
-- `README.md` - Update documentation
-- `knowledge/` - Add relevant documentation if needed
+**Business Value:** [Quantifiable impact and success metrics]
 
-**Files to reference:**
-- `@mcp/server.py` - Current MCP tool structure
-- `@tests/` - Existing test patterns
-- `@rag/` - RAG system integration points
-- `@requirements.txt` - Dependency management
+**Security/Compliance Requirements:** [GDPR, SOC 2, or other compliance needs]
 
-## Implementation Plan (8 steps)
+## Context Scoping & Planning
 
-1. **Analyze requirements** - Understand feature scope and integration points
-2. **Design API/interface** - Define MCP tool schemas and function signatures
-3. **Implement core logic** - Create feature module with business logic
-4. **Add MCP integration** - Wire feature into MCP server tools
-5. **Write comprehensive tests** - Unit and integration tests
-6. **Update documentation** - README and inline documentation
-7. **Test integration** - End-to-end testing with MCP protocol
-8. **Quality assurance** - Run all quality gates
-
-## Acceptance Criteria
-
-- ✅ Feature implements specified requirements completely
-- ✅ New MCP tools follow JSON-RPC schema standards
-- ✅ All tests pass including new feature tests
-- ✅ Quality gates pass: ruff, mypy, pytest
-- ✅ Documentation updated with usage examples
-- ✅ Feature integrates cleanly with existing RAG system
-- ✅ No regressions in existing functionality
-- ✅ MCP server starts and serves new tools correctly
-
-## Commands to Run
-
+### Knowledge Mining (RAG-Enhanced)
 ```bash
-# Development workflow
-python -m pytest tests/ -v  # Run tests after each major change
-ruff check .               # Code quality check
-mypy . --strict           # Type checking
-
-# Feature testing
-echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}' | python mcp/server.py
-# Should show new tool in the list
-
-# Specific feature testing
-echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "[new_tool]", "arguments": {...}}}' | python mcp/server.py
-
-# Full integration test
-python -m pytest tests/test_[feature].py -v
+@cursor-agent search_knowledge "similar feature implementations"
+@cursor-agent search_knowledge "security patterns for [domain]"
+@cursor-agent search_memory "previous implementation challenges"
 ```
 
-## Notes
+### Context Limitation (Token Optimization)
+```bash
+@file:requirements.md @folder:affected_modules
+@symbol:existing_integration_points
+@cursor-agent route "feature complexity assessment"
+```
 
-- Follow strict Plan→Code→Test→Review workflow
-- Keep changes minimal and atomic - one feature at a time
-- Add comprehensive error handling and logging
-- Update memory/reflexion.md with lessons learned
-- Test on Windows PowerShell environment
-- Document any new dependencies or configuration requirements
+### Risk Assessment & Planning
+- **Complexity Level**: [Simple/Moderate/Complex/Enterprise]
+- **Security Impact**: [None/Low/Medium/High/Critical]
+- **Performance Requirements**: [Latency, throughput, resource constraints]
+- **Rollback Strategy**: [Automated recovery procedures]
+
+## TDD Implementation Protocol (Red-Green-Refactor)
+
+### Phase 1: Specification (Red Phase)
+1. **Behavioral Tests**: Write failing tests defining exact behavior
+2. **Contract Tests**: API/interface specifications with error conditions
+3. **Integration Tests**: End-to-end scenarios with realistic data
+4. **Security Tests**: Authorization, input validation, and attack vectors
+
+### Phase 2: Implementation (Green Phase)
+1. **Minimal Code**: Smallest implementation to pass tests
+2. **Incremental Validation**: Test after each change (< 5 lines)
+3. **Pattern Compliance**: Follow established project patterns
+4. **Security-First**: Input validation and secure defaults
+
+### Phase 3: Refinement (Refactor Phase)
+1. **Code Quality**: Apply enterprise coding standards
+2. **Performance Optimization**: Meet latency and resource targets
+3. **Documentation**: Comprehensive inline and API documentation
+4. **Security Hardening**: Additional security layers and monitoring
+
+## Enterprise Quality Gates (Zero Tolerance)
+
+### Code Quality Assurance
+- ✅ **Security Audit**: `safety check --full-report` - Zero vulnerabilities
+- ✅ **Static Analysis**: `ruff check . --fix` - Enterprise standards
+- ✅ **Type Safety**: `mypy . --strict` - 100% coverage required
+- ✅ **Complexity Metrics**: Maintainability index > 75
+
+### Testing Excellence
+- ✅ **Unit Coverage**: `pytest --cov=. --cov-fail-under=95` - Branch coverage
+- ✅ **Integration Tests**: Full system validation with realistic scenarios
+- ✅ **Performance Tests**: Load testing against SLAs
+- ✅ **Security Tests**: Penetration testing and vulnerability scanning
+
+### Operational Readiness
+- ✅ **Monitoring**: Metrics, logging, and alerting instrumentation
+- ✅ **Documentation**: Auto-generated API docs and runbooks
+- ✅ **Deployment**: Infrastructure-as-code validation
+- ✅ **Rollback**: Automated recovery procedures tested
+
+## Advanced Implementation Commands
+
+```bash
+# Phase 1: TDD Specification (Red)
+poetry run python -m pytest tests/test_feature.py -v  # Should fail
+poetry run python -m pytest tests/test_security.py -v  # Security tests
+
+# Phase 2: Implementation (Green)
+poetry run python -m pytest tests/test_feature.py::test_minimal_implementation -v
+poetry run ruff check mcp/feature_module.py  # Incremental quality check
+
+# Phase 3: Refinement (Refactor)
+poetry run mypy mcp/feature_module.py --strict
+poetry run python -m pytest tests/ --cov=mcp --cov-fail-under=95
+
+# Enterprise Validation
+poetry run safety check
+docker build -t feature-test .
+docker run --rm feature-test python -m pytest tests/e2e/ -v
+```
+
+## Security & Compliance Checklist
+
+### Authentication & Authorization
+- [ ] Role-based access control implemented
+- [ ] API key rotation and secure storage
+- [ ] Audit logging for all access attempts
+- [ ] Rate limiting and abuse prevention
+
+### Data Protection
+- [ ] Input validation and sanitization
+- [ ] SQL injection prevention (if applicable)
+- [ ] XSS protection in web interfaces
+- [ ] Data encryption at rest and in transit
+
+### Operational Security
+- [ ] Secure logging (no sensitive data leakage)
+- [ ] Error messages don't reveal system information
+- [ ] Resource exhaustion protection
+- [ ] Secure configuration management
+
+## Performance & Scalability Requirements
+
+### Latency Targets
+- **P50**: < 100ms for standard operations
+- **P95**: < 500ms for complex operations
+- **P99**: < 2s for edge cases
+
+### Resource Constraints
+- **Memory**: < 256MB per request baseline
+- **CPU**: < 10% average utilization
+- **Storage**: Predictable growth patterns
+- **Network**: Efficient data transfer protocols
+
+## Monitoring & Observability
+
+### Metrics Collection
+```python
+# mcp/feature_module.py
+from prometheus_client import Counter, Histogram
+
+REQUEST_COUNT = Counter('feature_requests_total', 'Total feature requests')
+REQUEST_LATENCY = Histogram('feature_request_duration_seconds', 'Request duration')
+ERROR_COUNT = Counter('feature_errors_total', 'Total feature errors')
+```
+
+### Logging Standards
+- **Structured Logging**: JSON format with correlation IDs
+- **Log Levels**: DEBUG/INFO/WARNING/ERROR with appropriate detail
+- **Security Events**: Dedicated security log stream
+- **Performance Metrics**: Request timing and resource usage
+
+## Deployment & Rollback Strategy
+
+### Blue-Green Deployment
+```bash
+# Zero-downtime deployment with rollback capability
+kubectl set image deployment/feature-app feature-app=feature:v2
+kubectl rollout status deployment/feature-app
+# Automatic rollback on health check failure
+```
+
+### Feature Flags
+```python
+# Gradual rollout with feature flags
+if feature_flags.is_enabled('advanced_feature'):
+    return advanced_implementation()
+else:
+    return baseline_implementation()
+```
+
+## Success Metrics & Validation
+
+- **Functional Completeness**: 100% acceptance criteria met
+- **Performance Targets**: All SLAs achieved and monitored
+- **Security Posture**: Zero critical vulnerabilities
+- **Code Quality**: All automated quality gates passing
+- **Operational Readiness**: Full monitoring and alerting in place
+- **Documentation**: Complete user and developer documentation
+
+## Enterprise Notes
+
+- **Security First**: All features must pass security review before implementation
+- **Performance Baseline**: Establish and monitor performance from day one
+- **Monitoring Integration**: Features must emit proper metrics and logs
+- **Documentation Automation**: Generate docs from code and tests
+- **Compliance by Design**: Security and compliance built into architecture
+- **Scalability Proofing**: Design for 10x growth from initial requirements

@@ -7,7 +7,9 @@ Windows-first MCP server with ChromaDB integration for knowledge management.
 import asyncio
 import json
 import os
+import queue
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -28,8 +30,9 @@ except ImportError as e:
     print(f"Missing dependency: {e}", file=sys.stderr)
     sys.exit(1)
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from root directory
+ROOT_DIR = Path(__file__).parent.parent.parent
+load_dotenv(ROOT_DIR / ".env")
 
 
 class SimpleRateLimiter:
@@ -528,16 +531,36 @@ class MCPServer:
                 "error": str(e)
             }
 
+def stdin_reader(queue):
+    """Thread function to read from stdin."""
+    for line in sys.stdin:
+        queue.put(line.strip())
+
 async def main() -> None:
     """Main MCP server loop."""
     server = MCPServer()
 
-    # Read from stdin, write to stdout
-    for line in sys.stdin:
+    # Create a queue for inter-thread communication
+    input_queue = queue.Queue()
+
+    # Start stdin reader thread
+    reader_thread = threading.Thread(target=stdin_reader, args=(input_queue,))
+    reader_thread.daemon = True
+    reader_thread.start()
+
+    while True:
         try:
-            message = json.loads(line.strip())
+            # Wait for input with timeout
+            line_str = await asyncio.get_event_loop().run_in_executor(None, lambda: input_queue.get(timeout=0.1))
+            if not line_str:
+                continue
+
+            message = json.loads(line_str)
             response = await server.handle_message(message)
             print(json.dumps(response), flush=True)
+        except queue.Empty:
+            # No input available, continue loop
+            continue
         except json.JSONDecodeError:
             print(json.dumps({
                 "jsonrpc": "2.0",
