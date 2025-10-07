@@ -32,14 +32,8 @@ except ImportError as e:
     print(f"Missing dependency: {e}", file=sys.stderr)
     sys.exit(1)
 
-<<<<<<< HEAD
-# Load environment variables from root directory
-ROOT_DIR = Path(__file__).parent.parent.parent
+ROOT_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT_DIR / ".env")
-=======
-# Load environment variables
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env'))
->>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a
 
 
 class SimpleRateLimiter:
@@ -638,12 +632,6 @@ class MCPServer:
                 "error": str(e)
             }
 
-<<<<<<< HEAD
-def stdin_reader(queue):
-    """Thread function to read from stdin."""
-    for line in sys.stdin:
-        queue.put(line.strip())
-=======
     async def auto_context_search(self, task_description: str, task_type: str) -> dict[str, Any]:
         """
         Automatically search for relevant context before implementing a task.
@@ -827,43 +815,70 @@ def stdin_reader(queue):
         }
 
         return recommendations.get(task_type, ["Follow best practices from knowledge base"])
->>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a
+
+def read_message() -> dict[str, Any] | None:
+    """Read a Content-Length framed JSON-RPC message from stdin."""
+    while True:
+        line = sys.stdin.readline()
+        if not line:
+            return None  # EOF
+
+        line = line.strip()
+        if line.startswith("Content-Length: "):
+            try:
+                content_length = int(line[16:])  # Skip "Content-Length: "
+                # Skip empty line after Content-Length header
+                empty_line = sys.stdin.readline()
+                if empty_line.strip():
+                    continue  # Invalid format, try next line
+
+                # Read exactly content_length bytes
+                content = sys.stdin.read(content_length)
+                return json.loads(content)
+            except (ValueError, json.JSONDecodeError):
+                continue  # Invalid message, try next line
+        # Skip non-Content-Length lines
 
 async def main() -> None:
     """Main MCP server loop."""
     server = MCPServer()
 
-    # Create a queue for inter-thread communication
-    input_queue = queue.Queue()
-
-    # Start stdin reader thread
-    reader_thread = threading.Thread(target=stdin_reader, args=(input_queue,))
-    reader_thread.daemon = True
-    reader_thread.start()
-
     while True:
         try:
-            # Wait for input with timeout
-            line_str = await asyncio.get_event_loop().run_in_executor(None, lambda: input_queue.get(timeout=0.1))
-            if not line_str:
-                continue
+            # Read message with Content-Length framing
+            message = await asyncio.get_event_loop().run_in_executor(None, read_message)
+            if message is None:
+                break  # EOF, exit gracefully
 
-            message = json.loads(line_str)
             response = await server.handle_message(message)
-            print(json.dumps(response), flush=True)
-        except queue.Empty:
-            # No input available, continue loop
-            continue
+
+            # Send response with Content-Length framing
+            response_json = json.dumps(response)
+            response_bytes = response_json.encode('utf-8')
+            print(f"Content-Length: {len(response_bytes)}", flush=True)
+            print("", flush=True)  # Empty line
+            print(response_json, flush=True)
+
         except json.JSONDecodeError:
-            print(json.dumps({
+            error_response = {
                 "jsonrpc": "2.0",
                 "error": {"code": -32700, "message": "Parse error"}
-            }), flush=True)
+            }
+            response_json = json.dumps(error_response)
+            response_bytes = response_json.encode('utf-8')
+            print(f"Content-Length: {len(response_bytes)}", flush=True)
+            print("", flush=True)
+            print(response_json, flush=True)
         except Exception as e:
-            print(json.dumps({
+            error_response = {
                 "jsonrpc": "2.0",
                 "error": {"code": -32603, "message": f"Internal error: {str(e)}"}
-            }), flush=True)
+            }
+            response_json = json.dumps(error_response)
+            response_bytes = response_json.encode('utf-8')
+            print(f"Content-Length: {len(response_bytes)}", flush=True)
+            print("", flush=True)
+            print(response_json, flush=True)
 
 if __name__ == "__main__":
     asyncio.run(main())

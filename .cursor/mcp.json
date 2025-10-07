@@ -2,15 +2,11 @@
   "mcpServers": {
     "cursor-agent": {
       "command": "python",
-<<<<<<< HEAD
-      "args": [".cursor/mcp/server.py"]
-=======
-      "args": ["C:\\github\\insta\\Olcia\\.cursor\\mcp\\server.py"],
+      "args": [".cursor/mcp/server.py"],
       "env": {
-        "PYTHONPATH": "C:\\github\\insta\\Olcia\\.cursor"
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONPATH": ".cursor"
       }
->>>>>>> fec084309b53ab95eb9c5ffa65d7e600bc0a616a
     }
   }
 }
-

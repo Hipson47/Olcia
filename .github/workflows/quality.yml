@@ -1,0 +1,15 @@
+name: quality
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JSON
+        run: python - <<'PY'
+import json; json.load(open('.cursor/mcp.json'))
+PY
+      - name: Scan for conflict markers
+        run: |
+          if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- .; then
+            echo 'Unresolved conflicts found'; exit 1; fi
