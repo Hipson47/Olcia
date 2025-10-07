@@ -1,0 +1,15 @@
+moe:
+  router: { strategy: hybrid, top_k: 3, cisc_samples: 5, cisc_temperature: 0.8, early_stop_confidence: 0.85,
+            features: [file_ext, goal_keywords, requires_rag, safety_risk, test_presence] }
+  experts:
+    - { id: planner,   prompt: "experts/planner.md",    tools: [fs, grep, rag], strengths: [decompose, acceptance_criteria] }
+    - { id: coder,     prompt: "experts/coder.md",      tools: [fs, json_patch, pytest], strengths: [safe_edit, impl_min_diff] }
+    - { id: tester,    prompt: "experts/tester.md",     tools: [pytest], strengths: [tdd, assertions] }
+    - { id: refactor,  prompt: "experts/refactor.md",   tools: [fs], strengths: [cleanup, perf] }
+    - { id: security,  prompt: "experts/security.md",   tools: [fs], strengths: [secrets_scan, dangerous_calls] }
+    - { id: rag_researcher, prompt: "experts/rag.md",   tools: [rag, grep], strengths: [evidence, citation] }
+  routing_rules:
+    - { if: "goal_keywords ~= /(spec|plan|roadmap)/i", pick: [planner, tester] }
+    - { if: "file_ext in ['py','ts','js'] && goal_keywords ~= /(fix|bug|impl)/i", pick: [coder, tester] }
+    - { if: "goal_keywords ~= /(refactor|perf)/i", pick: [refactor, tester] }
+    - { if: "requires_rag == true", pick: [rag_researcher, planner] }

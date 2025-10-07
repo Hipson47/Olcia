@@ -13,3 +13,11 @@ PY
         run: |
           if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- .; then
             echo 'Unresolved conflicts found'; exit 1; fi
+      - name: Python smoke test
+        run: python - <<'PY'
+import sys
+sys.path.insert(0, '.cursor')
+from mcp.server import MCPServer
+server = MCPServer()
+print('IMPORT_OK')
+PY

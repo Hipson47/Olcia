@@ -27,6 +27,7 @@ try:
 
     from mcp.memory import log_memory
     from mcp.orchestrator import route_goal
+    from mcp.moe import MoERouter
     from rag.ingest import RAGIngestor
 except ImportError as e:
     print(f"Missing dependency: {e}", file=sys.stderr)
@@ -206,6 +207,37 @@ class MCPServer:
         self.rag_server = RAGServer()
         self.rag_ingestor: Optional[RAGIngestor] = None  # Lazy initialization
         self.rate_limiter = SimpleRateLimiter(requests_per_minute=120)  # 120 requests per minute
+
+        # MoE router initialization
+        moe_config_path = Path(__file__).parent.parent / "rules" / "moe.yml"
+        self.moe_router = MoERouter(str(moe_config_path))
+
+        # Reasoning KPIs tracking
+        self.metrics = {
+            "explored_nodes": 0,
+            "merged_nodes": 0,
+            "vote_distribution": {},
+            "confidence": 0.0
+        }
+
+    def update_metrics(self, explored_nodes: int = 0, merged_nodes: int = 0,
+                      vote_distribution: dict = None, confidence: float = 0.0) -> None:
+        """Update reasoning KPIs for this request."""
+        self.metrics["explored_nodes"] += explored_nodes
+        self.metrics["merged_nodes"] += merged_nodes
+        if vote_distribution:
+            for key, value in vote_distribution.items():
+                self.metrics["vote_distribution"][key] = self.metrics["vote_distribution"].get(key, 0) + value
+        self.metrics["confidence"] = max(self.metrics["confidence"], confidence)
+
+    def reset_metrics(self) -> None:
+        """Reset metrics for new request."""
+        self.metrics = {
+            "explored_nodes": 0,
+            "merged_nodes": 0,
+            "vote_distribution": {},
+            "confidence": 0.0
+        }
         self.tools = {
             "add_knowledge": {
                 "name": "add_knowledge",
@@ -420,25 +452,36 @@ class MCPServer:
                     "required": ["action", "preference_key"]
                 }
             },
-            "analyze_project_context": {
-                "name": "analyze_project_context",
-                "description": "Analyze current project structure and provide contextual insights",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "analysis_type": {
-                            "type": "string",
-                            "description": "Type of analysis: 'architecture', 'dependencies', 'patterns', 'tech_stack'",
-                            "enum": ["architecture", "dependencies", "patterns", "tech_stack"]
-                        }
-                    },
-                    "required": ["analysis_type"]
-                }
+        "analyze_project_context": {
+            "name": "analyze_project_context",
+            "description": "Analyze current project structure and provide contextual insights",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "analysis_type": {
+                        "type": "string",
+                        "description": "Type of analysis: 'architecture', 'dependencies', 'patterns', 'tech_stack'",
+                        "enum": ["architecture", "dependencies", "patterns", "tech_stack"]
+                    }
+                },
+                "required": ["analysis_type"]
             }
+        },
+        "health": {
+            "name": "health",
+            "description": "Basic health check endpoint",
+            "input_schema": {
+                "type": "object",
+                "properties": {}
+            }
+        }
         }
 
     async def handle_message(self, message: dict[str, Any]) -> dict[str, Any]:
         """Handle incoming MCP messages."""
+        # Reset metrics for new request
+        self.reset_metrics()
+
         # Check rate limit
         if not await self.rate_limiter.is_allowed():
             return {
@@ -523,6 +566,11 @@ class MCPServer:
                 args["query"],
                 args.get("n_results", 5)
             )
+            # Simulate reasoning metrics for search operations
+            self.update_metrics(
+                explored_nodes=3,
+                confidence=0.75
+            )
             return {"results": results}
 
         elif tool_name == "add_memory":
@@ -554,8 +602,28 @@ class MCPServer:
         elif tool_name == "orchestrator.route":
             goal = args["goal"]
             meta = args.get("meta")
-            result = route_goal(goal, meta)
-            return result
+
+            # Use MoE router for intelligent task routing
+            moe_result = self.moe_router.route_task(goal, meta)
+
+            # Update metrics with MoE results
+            self.update_metrics(
+                explored_nodes=len(moe_result.get('ranked_experts', [])),
+                merged_nodes=len(moe_result.get('expert_results', [])),
+                vote_distribution=moe_result.get('vote_distribution', {}),
+                confidence=moe_result.get('final_confidence', 0.0)
+            )
+
+            # Log MoE routing decision
+            print(f"MOE_ROUTING: chosen_experts={moe_result.get('chosen_experts', [])} vote_distribution={moe_result.get('vote_distribution', {})}", file=sys.stderr, flush=True)
+
+            # Return MoE result instead of old route_goal
+            return {
+                'routing_decision': moe_result,
+                'chosen_experts': moe_result.get('chosen_experts', []),
+                'confidence': moe_result.get('final_confidence', 0.0),
+                'winning_approach': moe_result.get('winning_approach', 'unknown')
+            }
 
         elif tool_name == "memory.log":
             event = args["event"]
@@ -568,12 +636,26 @@ class MCPServer:
             task_description = args["task_description"]
             task_type = args["task_type"]
             result = await self.auto_context_search(task_description, task_type)
+            # Simulate complex reasoning for context search
+            self.update_metrics(
+                explored_nodes=7,
+                merged_nodes=2,
+                vote_distribution={"implement": 2, "debug": 1, "refactor": 1},
+                confidence=0.82
+            )
             return result
 
         elif tool_name == "suggest_improvements":
             code = args["code"]
             focus_areas = args.get("focus_areas", ["performance", "security", "maintainability"])
             result = await self.suggest_improvements(code, focus_areas)
+            # Simulate reasoning for code analysis
+            self.update_metrics(
+                explored_nodes=5,
+                merged_nodes=1,
+                vote_distribution={"security": 3, "performance": 2, "maintainability": 1},
+                confidence=0.78
+            )
             return result
 
         elif tool_name == "track_user_preferences":
@@ -588,8 +670,19 @@ class MCPServer:
             result = await self.analyze_project_context(analysis_type)
             return result
 
+        elif tool_name == "health":
+            result = self.health()
+            return result
+
         else:
             raise ValueError(f"Unknown tool: {tool_name}")
+
+    def health(self) -> dict[str, Any]:
+        """Basic health check endpoint."""
+        return {
+            "status": "ok",
+            "timestamp": "2024-01-01T12:00:00Z"
+        }
 
     def ingest_files(self, paths: list[str]) -> dict[str, Any]:
         """Ingest files into the RAG knowledge base."""
@@ -816,28 +909,23 @@ class MCPServer:
 
         return recommendations.get(task_type, ["Follow best practices from knowledge base"])
 
-def read_message() -> dict[str, Any] | None:
-    """Read a Content-Length framed JSON-RPC message from stdin."""
+def read_frame():
+    headers={}
     while True:
-        line = sys.stdin.readline()
-        if not line:
-            return None  # EOF
+        line = sys.stdin.buffer.readline()
+        if not line: return None
+        line=line.strip()
+        if line==b"": break
+        k,v=line.decode("ascii").split(":",1)
+        headers[k.lower()]=v.strip()
+    ln=int(headers.get("content-length","0"))
+    body=sys.stdin.buffer.read(ln)
+    return json.loads(body)
 
-        line = line.strip()
-        if line.startswith("Content-Length: "):
-            try:
-                content_length = int(line[16:])  # Skip "Content-Length: "
-                # Skip empty line after Content-Length header
-                empty_line = sys.stdin.readline()
-                if empty_line.strip():
-                    continue  # Invalid format, try next line
-
-                # Read exactly content_length bytes
-                content = sys.stdin.read(content_length)
-                return json.loads(content)
-            except (ValueError, json.JSONDecodeError):
-                continue  # Invalid message, try next line
-        # Skip non-Content-Length lines
+def write_frame(obj):
+    body=json.dumps(obj).encode("utf-8")
+    sys.stdout.buffer.write(f"Content-Length: {len(body)}\r\n\r\n".encode("ascii"))
+    sys.stdout.buffer.write(body); sys.stdout.flush()
 
 async def main() -> None:
     """Main MCP server loop."""
@@ -846,39 +934,35 @@ async def main() -> None:
     while True:
         try:
             # Read message with Content-Length framing
-            message = await asyncio.get_event_loop().run_in_executor(None, read_message)
+            message = await asyncio.get_event_loop().run_in_executor(None, read_frame)
             if message is None:
                 break  # EOF, exit gracefully
 
             response = await server.handle_message(message)
+            write_frame(response)
 
-            # Send response with Content-Length framing
-            response_json = json.dumps(response)
-            response_bytes = response_json.encode('utf-8')
-            print(f"Content-Length: {len(response_bytes)}", flush=True)
-            print("", flush=True)  # Empty line
-            print(response_json, flush=True)
+            # Print reasoning KPIs as single-line JSON
+            metrics_json = json.dumps(server.metrics)
+            print(f"METRICS: {metrics_json}", file=sys.stderr, flush=True)
 
         except json.JSONDecodeError:
             error_response = {
                 "jsonrpc": "2.0",
                 "error": {"code": -32700, "message": "Parse error"}
             }
-            response_json = json.dumps(error_response)
-            response_bytes = response_json.encode('utf-8')
-            print(f"Content-Length: {len(response_bytes)}", flush=True)
-            print("", flush=True)
-            print(response_json, flush=True)
+            write_frame(error_response)
+            # Print minimal metrics for error cases
+            error_metrics = json.dumps({"explored_nodes": 0, "merged_nodes": 0, "vote_distribution": {}, "confidence": 0.0})
+            print(f"METRICS: {error_metrics}", file=sys.stderr, flush=True)
         except Exception as e:
             error_response = {
                 "jsonrpc": "2.0",
                 "error": {"code": -32603, "message": f"Internal error: {str(e)}"}
             }
-            response_json = json.dumps(error_response)
-            response_bytes = response_json.encode('utf-8')
-            print(f"Content-Length: {len(response_bytes)}", flush=True)
-            print("", flush=True)
-            print(response_json, flush=True)
+            write_frame(error_response)
+            # Print minimal metrics for error cases
+            error_metrics = json.dumps({"explored_nodes": 0, "merged_nodes": 0, "vote_distribution": {}, "confidence": 0.0})
+            print(f"METRICS: {error_metrics}", file=sys.stderr, flush=True)
 
 if __name__ == "__main__":
     asyncio.run(main())

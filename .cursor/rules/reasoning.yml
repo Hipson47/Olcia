@@ -1,0 +1,9 @@
+reasoning:
+  enabled: true
+  mode: "tot+got"
+  tot: { branching: 3, depth: 4, heuristic: "self-score@step", backtrack: true }
+  got: { reuse_nodes: true, merge_strategy: "best-score", cycles_allowed: true }
+  self_consistency: { samples: 7, temperature: 0.9, vote: "confidence-weighted", abstain_if_tie: true }
+budgets: { max_tokens: 16000, max_runtime_sec: 120, early_stop_if_confidence_gt: 0.85 }
+rag: { enabled: true, rerank: true }
+gates: [plan, verify-plan, apply, test, review]
